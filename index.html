@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GTMS & Material Receiving System</title>
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TMS System">
+  <meta name="application-name" content="TMS System">
+  <meta name="theme-color" content="#0f172a">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    header h1 { font-size: 20px; margin: 0; }
+    header h1.brand { display: flex; align-items: center; gap: 12px; }
+    header .user-info { font-size: 13px; opacity: 0.9; }
+    .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen select-none">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2">
+      <div class="flex items-center">
+        <h1 class="brand flex items-center gap-3">
+          <div class="w-10 h-10 bg-[#15325c] rounded-xl p-1.5 flex items-center justify-center shadow-md shrink-0 border border-slate-700/50">
+            <svg viewBox="0 0 500 220" class="w-full h-full fill-current text-white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M45 35 C 180 15, 320 15, 455 35 C 475 80, 480 135, 460 185 C 320 205, 180 205, 40 185 C 20 135, 25 80, 45 35 Z" fill="none" stroke="currentColor" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+              <path d="M190 28 L175 192" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+              <path d="M310 28 L325 192" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+              <path d="M30 110 C 180 124, 320 124, 470 110" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-base sm:text-lg font-black tracking-wide text-white">GTMS & Material Receiving System</span>
+            <span class="text-[10px] sm:text-[11px] font-normal text-slate-400">Transport Monitoring, Delivery Planning, Outbound & Receiving</span>
+          </div>
+        </h1>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between md:justify-end gap-2 w-full md:w-auto header-right">
+        <div class="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 space-x-1 w-full sm:w-auto justify-stretch">
+          <button id="tabBtnPlanning" onclick="switchTab('planning')" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-purple-600 text-white shadow-md cursor-pointer">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Delivery Planning</span>
+            <span id="badgePlanCount" class="bg-purple-900/60 text-purple-200 px-1.5 py-0.5 rounded-full text-[9px]">0</span>
+          </button>
+          <button id="tabBtnOperational" onclick="switchTab('operational')" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white cursor-pointer">
+            <i class="fa-solid fa-truck-fast"></i>
+            <span>Operational TMS</span>
+            <span id="badgeOpsCount" class="bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-full text-[9px]">0</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-center w-full md:w-auto">
+          <button onclick="openPinModal()" id="btnLogin" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-lock text-amber-400"></i>
+            <span>Admin Login</span>
+          </button>
+          <button onclick="logoutAdmin()" id="btnLogout" class="hidden w-full sm:w-auto px-4 py-2 bg-rose-900 hover:bg-rose-800 text-rose-100 border border-rose-700 rounded-xl text-xs font-bold transition items-center justify-center gap-1.5 cursor-pointer shadow-lg z-50">
+            <i class="fa-solid fa-user-check text-emerald-400"></i>
+            <span id="txtUserRole">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+
+    <!-- PAGE 1: DELIVERY PLANNING -->
+    <div id="pagePlanning" class="space-y-4 sm:space-y-6">
+      <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <span class="px-2.5 py-1 bg-purple-500/30 text-purple-200 border border-purple-400/30 rounded-full text-[9px] font-bold tracking-wide uppercase">Planning Module</span>
+          <h2 class="text-xl sm:text-2xl font-black mt-1.5">Delivery Planning</h2>
+          <p class="text-[11px] text-purple-200 mt-0.5">Manage & edit master delivery plans created by Geely Admin.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <button onclick="exportToExcel('planning')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
+          </button>
+          <button onclick="exportToPDF('planning')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-pdf"></i> <span>Export PDF</span>
+          </button>
+          <button id="btnCreatePlan" onclick="openModal(false)" class="hidden w-full sm:w-auto px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-calendar-plus"></i> <span>Create Delivery Plan</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchPlanning" onkeyup="filterPlanningTable()" placeholder="Search PO No, Route, Model..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl w-full md:w-auto">
+            <i class="fa-solid fa-calendar-days text-purple-600 text-xs"></i>
+            <span class="text-[11px] font-bold text-slate-600">Plan Date:</span>
+            <input type="date" id="filterPlanDate" onchange="filterPlanningTable()" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <button onclick="clearPlanDateFilter()" class="text-xs text-slate-400 hover:text-rose-600 ms-1" title="Clear Date Filter"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-semibold self-end md:self-center me-2">
+        <span>Total Master Plans: <span id="planTotalText" class="text-purple-700 font-bold">0 Plans</span></span>
+        <span>Total Container Qty: <span id="planTotalQtyText" class="text-purple-700 font-bold">0</span></span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table id="tablePlanning" class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-purple-950 text-purple-200 uppercase font-semibold">
+              <tr>
+                <th class="px-3 py-3">PLAN DATE</th>
+                <th class="px-3 py-3">PO NO / BATCH NO</th>
+                <th class="px-3 py-3">MODEL</th>
+                <th class="px-3 py-3">TYPE</th>
+                <th class="px-3 py-3">ROUTE (ORIGIN &rarr; DEST)</th>
+                <th class="px-3 py-3">TRUCK TYPE</th>
+                <th class="px-3 py-3 text-center">CONTAINER QTY</th>
+                <th class="px-3 py-3">CATEGORY</th>
+                <th class="px-3 py-3">REMARKS</th>
+                <th class="px-3 py-3">DELIVERY STATUS</th>
+                <th class="px-3 py-3 text-center">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="tablePlanningBody" class="divide-y divide-slate-100 font-medium">
+              <tr><td colspan="11" class="text-center py-12 text-slate-400">Loading delivery planning data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: OPERATIONAL TMS -->
+    <div id="pageOperational" class="space-y-4 sm:space-y-6 hidden">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-truck-fast text-indigo-600"></i> Operational TMS & Material Receiving
+          </h2>
+          <p class="text-[11px] text-slate-500 mt-0.5">Real-time status monitoring for daily deliveries, unloaded status, WIP, and variance.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+            <i class="fa-solid fa-calendar text-indigo-600 text-xs"></i>
+            <span class="text-[11px] font-bold text-slate-600">Dashboard Date:</span>
+            <input type="date" id="filterDashboardDate" onchange="loadData()" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+          </div>
+          <button id="btnScheduleDelivery" onclick="openModal(true)" class="hidden px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-plus text-xs"></i> <span>Schedule Delivery</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">DAILY DELIVERIES</p>
+            <h3 id="statTotalOps" class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">0</h3>
+            <p id="lblDateOps" class="text-[9px] text-slate-400 mt-0.5">Selected Date</p>
+          </div>
+          <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i class="fa-solid fa-truck-moving text-xl"></i></div>
+        </div>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">DAILY UNLOADED</p>
+            <h3 id="statUnloaded" class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">0</h3>
+            <p id="lblDateUnloaded" class="text-[9px] text-slate-400 mt-0.5">Selected Date</p>
+          </div>
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-box-archive text-xl"></i></div>
+        </div>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">DAILY WIP</p>
+            <h3 id="statWip" class="text-2xl sm:text-3xl font-black text-amber-500 mt-1">0</h3>
+            <p id="lblDateWip" class="text-[9px] text-slate-400 mt-0.5">Selected Date</p>
+          </div>
+          <div class="p-3 bg-amber-50 text-amber-500 rounded-xl"><i class="fa-solid fa-spinner text-xl"></i></div>
+        </div>
+        <div class="bg-white p-3.5 sm:p-5 rounded-xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">DAILY VARIANCE</p>
+            <h3 id="statVariance" class="text-2xl sm:text-3xl font-black text-rose-600 mt-1">0</h3>
+            <p id="lblDateVariance" class="text-[9px] text-slate-400 mt-0.5">Selected Date</p>
+          </div>
+          <div class="p-3 bg-rose-50 text-rose-600 rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div class="relative w-full md:w-96">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchOps" onkeyup="filterOpsTable()" placeholder="Search PO No, Trip, Status, Model, Category..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+          <select id="opsCategoryFilter" onchange="filterOpsTable()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2">
+            <option value="">All Categories</option>
+            <option value="KD">KD</option>
+            <option value="PBP">PBP</option>
+            <option value="NON IKD">NON IKD</option>
+          </select>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Kosongkan untuk mengikuti Dashboard Date">
+              <i class="fa-solid fa-file-export text-indigo-600 text-xs"></i>
+              <span class="text-[11px] font-bold text-slate-600">Export Date:</span>
+              <input type="date" id="exportOpsDate" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+              <button type="button" onclick="document.getElementById('exportOpsDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Ikuti Dashboard Date"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <button onclick="exportToExcel('operational')" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold rounded-xl cursor-pointer">Excel</button>
+            <button onclick="exportToPDF('operational')" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold rounded-xl cursor-pointer">PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operational Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table id="tableOps" class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-800 text-slate-200 uppercase font-semibold">
+              <tr>
+                <th class="px-3 py-3">DELIVERY DATE</th>
+                <th class="px-3 py-3">PO NO / BATCH NO</th>
+                <th class="px-3 py-3">MODEL</th>
+                <th class="px-3 py-3">TYPE</th>
+                <th class="px-3 py-3">ROUTE</th>
+                <th class="px-3 py-3">TRUCK TYPE</th>
+                <th class="px-3 py-3 text-center">TRIP</th>
+                <th class="px-3 py-3 text-center">CONTAINER QTY</th>
+                <th class="px-3 py-3">CATEGORY</th>
+                <th class="px-3 py-3">REMARKS</th>
+                <th class="px-3 py-3">DELIVERY STATUS</th>
+                <th class="px-3 py-3">QTY CASE</th>
+                <th class="px-3 py-3">CASE COND.</th>
+                <th class="px-3 py-3 text-center">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="tableOpsBody" class="divide-y divide-slate-100 font-medium">
+              <tr><td colspan="14" class="text-center py-12 text-slate-400">Loading operational data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  <div id="pinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[110] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 text-center">
+      <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"><i class="fa-solid fa-user-shield"></i></div>
+      <h3 class="text-base font-bold text-slate-800 mb-1">Admin Login</h3>
+      <p class="text-xs text-slate-500 mb-4">Enter Geely, Meritar, or Receiving PIN.</p>
+      <form onsubmit="verifyPin(event)" class="space-y-4">
+        <input type="password" id="pinInput" placeholder="Enter Admin PIN" class="w-full text-center px-4 py-2.5 border rounded-xl text-sm font-bold tracking-widest focus:ring-2 focus:ring-purple-500 outline-none" required>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeModal('pinModal')" class="w-1/2 py-2.5 bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl cursor-pointer">Cancel</button>
+          <button type="submit" class="w-1/2 py-2.5 bg-purple-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer">Login</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="shipmentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden my-auto">
+      <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white">
+        <h3 id="modalTitle" class="text-base font-bold flex items-center gap-2"><i class="fa-solid fa-truck"></i> Delivery Plan Form</h3>
+        <button type="button" onclick="closeModal('shipmentModal')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form id="tmsForm" onsubmit="saveData(event)" class="p-6 space-y-4">
+        <input type="hidden" id="rowId">
+        <input type="hidden" id="isScheduleFlag" value="false">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Plan / Dispatch Date</label>
+            <input type="date" id="tanggal" class="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-purple-500 outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1 flex justify-between">
+              <span>PO No / Batch No</span>
+              <span id="autoFillBadge" class="hidden text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-bolt"></i> Auto-filled</span>
+            </label>
+            <input type="text" id="poBatchNo" list="planningPoOptions" oninput="autoFillFromPlanning()" placeholder="Enter / Select PO No" class="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 outline-none" required>
+            <datalist id="planningPoOptions"></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Model</label>
+            <select id="model" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none" required>
+              <option value="E245">E245</option><option value="P145">P145</option><option value="E22H">E22H</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Type</label>
+            <select id="type" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none" required>
+              <option value="Body Cabin">Body Cabin</option><option value="Part Pallet">Part Pallet</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Origin Location</label>
+            <input type="text" id="origin" placeholder="Origin" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Destination Location</label>
+            <input type="text" id="destination" placeholder="Destination" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Truck Type</label>
+            <select id="truckType" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none">
+              <option value="CDD Box">CDD Box</option><option value="Tronton Wingbox">Tronton Wingbox</option><option value="Trailer 40ft">Trailer 40ft</option><option value="Blind Van">Blind Van</option>
+            </select>
+          </div>
+          <div id="tripContainer">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Trip Number / Batch</label>
+            <input type="text" id="trip" placeholder="e.g. Trip 1" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Container Qty</label>
+            <input type="number" id="qtyContainer" min="1" placeholder="Qty" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+            <select id="category" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none" required>
+              <option value="KD">KD</option><option value="PBP">PBP</option><option value="NON IKD">NON IKD</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Special Notes / Remarks (Optional)</label>
+            <input type="text" id="notes" placeholder="Remarks" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
+          </div>
+        </div>
+        <div class="pt-3 flex justify-end gap-2.5 border-t">
+          <button type="button" onclick="closeModal('shipmentModal')" class="px-4 py-2 bg-slate-100 text-xs font-semibold rounded-xl cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer">Save Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="outboundModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+      <div class="bg-amber-600 px-5 py-3.5 flex justify-between items-center text-white">
+        <h3 class="text-base font-bold"><i class="fa-solid fa-paper-plane"></i> Outbound Form</h3>
+        <button onclick="closeModal('outboundModal')" class="cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="submitOutbound(event)" class="p-5 space-y-4">
+        <input type="hidden" id="outboundRowId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">PO No / Batch No</label>
+          <input type="text" id="outboundPoBatchNo" class="w-full px-3 py-2 bg-slate-100 border rounded-xl text-xs font-bold text-slate-700" readonly>
+        </div>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">Confirm that truck loading is complete.</div>
+        <div class="pt-3 flex justify-end gap-2.5 border-t">
+          <button type="button" onclick="closeModal('outboundModal')" class="px-4 py-2 bg-slate-100 text-xs rounded-xl cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-xl cursor-pointer">Confirm Outbound</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="unloadingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+      <div class="bg-emerald-700 px-5 py-3.5 flex justify-between items-center text-white">
+        <h3 class="text-base font-bold"><i class="fa-solid fa-box-check"></i> Receiving Form</h3>
+        <button onclick="closeModal('unloadingModal')" class="cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="submitUnloading(event)" class="p-5 space-y-4">
+        <input type="hidden" id="unloadRowId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">PO No / Batch No</label>
+          <input type="text" id="unloadPoBatchNo" class="w-full px-3 py-2 bg-slate-100 border rounded-xl text-xs font-bold text-slate-700" readonly>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Qty Case (Received)</label>
+          <input type="number" id="unloadQty" min="1" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Case Condition</label>
+          <select id="materialCond" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none" required>
+          <option value="GOOD">GOOD</option>
+          <option value="DAMAGE">DAMAGE</option>
+          <option value="DENT &amp; SCRATCH">DENT &amp; SCRATCH</option>
+          </select>
+        </div>
+        <div class="pt-3 flex justify-end gap-2.5 border-t">
+          <button type="button" onclick="closeModal('unloadingModal')" class="px-4 py-2 bg-slate-100 text-xs rounded-xl cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl cursor-pointer">Confirm Receiving</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="customConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[120] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h3 class="text-base font-bold text-slate-800 mb-1">Delete Confirmation</h3>
+      <p class="text-xs text-slate-500 mb-5">Are you sure you want to delete this record?</p>
+      <div class="flex gap-2">
+        <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-100 text-xs font-bold rounded-xl cursor-pointer">Cancel</button>
+        <button type="button" id="btnConfirmDelete" class="w-1/2 py-2.5 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="customAlert" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div id="alertIconBg" class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center"><i id="alertIcon" class="text-3xl"></i></div>
+      <h3 id="alertTitle" class="text-base font-bold mb-1">Notification</h3>
+      <p id="alertMessage" class="text-xs text-slate-500 mb-5"></p>
+      <button onclick="closeCustomAlert()" class="w-full py-2.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer">OK</button>
+    </div>
+  </div>
+
+  <script>
+    let allPlanning = [];
+    let allOperational = [];
+    let userRole = localStorage.getItem("tms_user_role") || "GUEST";
+    const PIN_GEELY = "Geely@2026";
+    const PIN_MERITAR = "Meritar@2026";
+    const PIN_RECEIVING = "Receiving@2026";
+    let selectedRowToDelete = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      link.type = 'image/svg+xml';
+      link.rel = 'icon';
+      link.href = "data:image/svg+xml,%3Csvg viewBox='0 0 500 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 35 C 180 15, 320 15, 455 35 C 475 80, 480 135, 460 185 C 320 205, 180 205, 40 185 C 20 135, 25 80, 45 35 Z' fill='%2315325c' stroke='%23ffffff' stroke-width='14' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M190 28 L175 192' stroke='%23ffffff' stroke-width='12' stroke-linecap='round'/%3E%3Cpath d='M310 28 L325 192' stroke='%23ffffff' stroke-width='12' stroke-linecap='round'/%3E%3Cpath d='M30 110 C 180 124, 320 124, 470 110' fill='none' stroke='%23ffffff' stroke-width='12' stroke-linecap='round'/%3E%3C/svg%3E";
+      document.getElementsByTagName('head')[0].appendChild(link);
+
+      const today = new Date().toLocaleDateString('en-CA');
+      
+      const planDatePicker = document.getElementById("filterPlanDate");
+      if (planDatePicker) planDatePicker.value = today;
+
+      const datePicker = document.getElementById("filterDashboardDate");
+      if (datePicker) datePicker.value = today;
+
+      loadData();
+      updateAuthUI();
+
+      setInterval(refreshData, 2000);
+    });
+
+    let isFetching = false;
+let lastDataSignature = "";
+
+function isAnyModalOpen() {
+  return ['shipmentModal', 'outboundModal', 'unloadingModal', 'pinModal', 'customAlert', 'customConfirmModal']
+    .some(id => !document.getElementById(id).classList.contains('hidden'));
+}
+
+function refreshData() {
+  // jangan menumpuk, jangan jalan saat tab tidak aktif atau ada popup terbuka
+  if (isFetching || document.hidden || isAnyModalOpen()) return;
+  isFetching = true;
+
+  const selectedDate = document.getElementById("filterDashboardDate").value;
+  google.script.run
+    .withSuccessHandler(function(res) {
+      isFetching = false;
+      if (isAnyModalOpen()) return;   // data yang datang saat popup tampil diabaikan, nanti diambil lagi
+      const signature = JSON.stringify(res);
+      if (signature === lastDataSignature) return;   // data sama, tidak perlu render ulang
+      lastDataSignature = signature;
+
+      allPlanning = res.planning || [];
+      allOperational = res.operational || [];
+      updateBadgesAndKPI(res.stats || { total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: selectedDate });
+      filterPlanningTable();
+      renderOpsTable(allOperational);
+      populatePoDatalist();
+    })
+    .withFailureHandler(function() { isFetching = false; })
+    .getTMSData(selectedDate);
+}
+    
+    function openPinModal() {
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinModal").classList.remove("hidden");
+      document.getElementById("pinModal").classList.add("flex");
+    }
+
+    function verifyPin(e) {
+      e.preventDefault();
+      const inputPin = document.getElementById("pinInput").value;
+      if (inputPin === PIN_GEELY) {
+        userRole = "GEELY";
+        localStorage.setItem("tms_user_role", "GEELY");
+        closeModal("pinModal");
+        updateAuthUI();
+        showAlert("Welcome! Admin Geely Logged In", "success");
+      } else if (inputPin === PIN_MERITAR) {
+        userRole = "MERITAR";
+        localStorage.setItem("tms_user_role", "MERITAR");
+        closeModal("pinModal");
+        updateAuthUI();
+        showAlert("Welcome! Admin Meritar Logged In", "success");
+      } else if (inputPin === PIN_RECEIVING) {
+        userRole = "RECEIVING";
+        localStorage.setItem("tms_user_role", "RECEIVING");
+        closeModal("pinModal");
+        updateAuthUI();
+        switchTab('operational');
+        showAlert("Welcome! Receiving Staff Logged In", "success");
+      } else {
+        showAlert("Incorrect PIN Access!", "error");
+      }
+    }
+
+    function logoutAdmin() {
+      userRole = "GUEST";
+      localStorage.removeItem("tms_user_role");
+      updateAuthUI();
+      switchTab('operational');
+      showAlert("Logged out successfully.", "success");
+    }
+
+    function updateAuthUI() {
+      const btnLogin = document.getElementById("btnLogin");
+      const btnLogout = document.getElementById("btnLogout");
+      const txtUserRole = document.getElementById("txtUserRole");
+      const btnCreatePlan = document.getElementById("btnCreatePlan");
+      const btnScheduleDelivery = document.getElementById("btnScheduleDelivery");
+      const tabBtnPlanning = document.getElementById("tabBtnPlanning");
+
+      if (userRole === "GEELY") {
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "flex";
+        txtUserRole.innerText = "Admin Geely (Logout)";
+        btnCreatePlan.classList.remove("hidden"); 
+        btnScheduleDelivery.classList.remove("hidden");
+        if (tabBtnPlanning && tabBtnPlanning.parentElement) tabBtnPlanning.parentElement.style.display = "flex";
+      } else if (userRole === "MERITAR") {
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "flex";
+        txtUserRole.innerText = "Admin Meritar (Logout)";
+        btnCreatePlan.classList.add("hidden"); 
+        btnScheduleDelivery.classList.remove("hidden");
+        if (tabBtnPlanning && tabBtnPlanning.parentElement) tabBtnPlanning.parentElement.style.display = "flex";
+      } else if (userRole === "RECEIVING") {
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "flex";
+        txtUserRole.innerText = "Receiving Staff (Logout)";
+        btnCreatePlan.classList.add("hidden"); 
+        btnScheduleDelivery.classList.add("hidden");
+        if (tabBtnPlanning && tabBtnPlanning.parentElement) tabBtnPlanning.parentElement.style.display = "flex";
+      } else {
+        btnLogin.style.display = "flex";
+        btnLogout.style.display = "none";
+        btnCreatePlan.classList.add("hidden"); 
+        btnScheduleDelivery.classList.add("hidden");
+        if (tabBtnPlanning && tabBtnPlanning.parentElement) tabBtnPlanning.parentElement.style.display = "flex";
+      }
+      
+      filterPlanningTable();
+      renderOpsTable(allOperational);
+    }
+
+    function switchTab(tab) {
+      const btnPlan = document.getElementById("tabBtnPlanning");
+      const btnOps = document.getElementById("tabBtnOperational");
+      const pagePlan = document.getElementById("pagePlanning");
+      const pageOps = document.getElementById("pageOperational");
+
+      if (tab === 'planning') {
+        btnPlan.className = "flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-purple-600 text-white shadow-md cursor-pointer";
+        btnOps.className = "flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white cursor-pointer";
+        pagePlan.classList.remove("hidden"); pageOps.classList.add("hidden");
+      } else {
+        btnOps.className = "flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-md cursor-pointer";
+        btnPlan.className = "flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white cursor-pointer";
+        pageOps.classList.remove("hidden"); pagePlan.classList.add("hidden");
+      }
+    }
+
+    function loadData() {
+      const selectedDate = document.getElementById("filterDashboardDate").value;
+      google.script.run.withSuccessHandler(function(res) {
+        allPlanning = res.planning || [];
+        allOperational = res.operational || [];
+        
+        updateBadgesAndKPI(res.stats || { total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: selectedDate });
+        
+        const planDatePicker = document.getElementById("filterPlanDate");
+        if (planDatePicker && !planDatePicker.value) {
+          planDatePicker.value = new Date().toISOString().split('T')[0];
+        }
+
+        filterPlanningTable();
+        renderOpsTable(allOperational);
+        populatePoDatalist();
+      }).getTMSData(selectedDate);
+    }
+
+    function clearPlanDateFilter() {
+      document.getElementById("filterPlanDate").value = "";
+      filterPlanningTable();
+    }
+
+    function getOpenPlans() {
+  return allPlanning.filter(p => String(p.status || '').trim().toUpperCase() !== 'COMPLETED');
+}
+
+function populatePoDatalist() {
+  const datalist = document.getElementById("planningPoOptions");
+  if (!datalist) return;
+
+  // satu entri per PO/Batch, gabungkan Type yang masih open
+  const grouped = {};
+  getOpenPlans().forEach(item => {
+    const key = item.poBatchNo;
+    if (!grouped[key]) {
+      grouped[key] = { model: item.model, route: item.origin + ' -> ' + item.destination, types: [] };
+    }
+    if (!grouped[key].types.includes(item.type)) grouped[key].types.push(item.type);
+  });
+
+  let optionsHtml = '';
+  Object.keys(grouped).forEach(po => {
+    const g = grouped[po];
+    optionsHtml += `<option value="${po}">${g.model} | ${g.types.join(', ')} | ${g.route}</option>`;
+  });
+  datalist.innerHTML = optionsHtml;
+}
+
+    function autoFillFromPlanning() {
+      const isSchedule = document.getElementById("isScheduleFlag").value === "true";
+      if (!isSchedule) return;
+      const poInput = document.getElementById("poBatchNo").value.trim().toLowerCase();
+      const badge = document.getElementById("autoFillBadge");
+      if (!poInput) { if (badge) badge.classList.add("hidden"); return; }
+
+      const matchedPlan = getOpenPlans().find(s => s.poBatchNo.toLowerCase() === poInput)
+                 || allPlanning.find(s => s.poBatchNo.toLowerCase() === poInput);
+      if (matchedPlan) {
+        document.getElementById("model").value = matchedPlan.model || "E245";
+        document.getElementById("type").value = matchedPlan.type || "Body Cabin";
+        document.getElementById("origin").value = matchedPlan.origin || "";
+        document.getElementById("destination").value = matchedPlan.destination || "";
+        document.getElementById("truckType").value = matchedPlan.truckType || "CDD Box";
+        document.getElementById("qtyContainer").value = matchedPlan.qtyContainer || 1;
+        document.getElementById("category").value = matchedPlan.category || "KD";
+        document.getElementById("notes").value = matchedPlan.notes || "";
+        if (badge) badge.classList.remove("hidden");
+      } else {
+        if (badge) badge.classList.add("hidden");
+      }
+    }
+
+    function updateBadgesAndKPI(stats) {
+      const selectedDate = document.getElementById("filterDashboardDate").value;
+      const planDatePicker = document.getElementById("filterPlanDate");
+      const selectedPlanDate = planDatePicker ? planDatePicker.value : selectedDate;
+
+      const activePlanningList = allPlanning.filter(s => {
+        const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+        if (selectedPlanDate && itemDate !== selectedPlanDate) return false;
+        return s.status === 'PLANNED';
+      });
+
+      const currentWipCount = stats.wip || 0;
+
+      document.getElementById("badgePlanCount").innerText = activePlanningList.length;
+      document.getElementById("badgeOpsCount").innerText = currentWipCount;
+
+      document.getElementById("statTotalOps").innerText = stats.total || 0;
+      document.getElementById("statUnloaded").innerText = stats.unloaded || 0;
+      document.getElementById("statWip").innerText = currentWipCount;
+      document.getElementById("statVariance").innerText = stats.variance || 0;
+      
+      if (stats.targetDate) {
+        document.getElementById("lblDateOps").innerText = "Date: " + stats.targetDate;
+        document.getElementById("lblDateUnloaded").innerText = "Date: " + stats.targetDate;
+        document.getElementById("lblDateWip").innerText = "Date: " + stats.targetDate;
+        document.getElementById("lblDateVariance").innerText = "Date: " + stats.targetDate;
+      }
+    }
+
+    function filterPlanningTable() {
+      const query = document.getElementById("searchPlanning").value.trim().toLowerCase();
+      const selectedPlanDate = document.getElementById("filterPlanDate").value;
+
+      const filtered = allPlanning.filter(s => {
+      // Saat search diisi: cari di SEMUA tanggal, abaikan Plan Date
+      if (query) {
+        return [
+        s.poBatchNo, s.model, s.type, s.origin, s.destination,
+        s.truckType, s.category, s.notes, s.status, s.tanggal
+      ].some(v => v && String(v).toLowerCase().includes(query));
+    }
+
+      // Saat search kosong: ikuti filter Plan Date seperti biasa
+      const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+      return !selectedPlanDate || itemDate === selectedPlanDate;
+    });
+
+    renderPlanningTable(filtered);
+    }
+
+    function renderPlanningTable(data) {
+      const tbody = document.getElementById("tablePlanningBody");
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-12 text-slate-400">No delivery planning data found for the selected date.</td></tr>`;
+        document.getElementById("planTotalText").innerText = "0 Plans";
+        document.getElementById("planTotalQtyText").innerText = "0";
+        return;
+      }
+
+      document.getElementById("planTotalText").innerText = data.length + " Plans";
+      const totalQty = data.reduce((sum, item) => sum + (parseInt(item.qtyContainer) || 0), 0);
+      document.getElementById("planTotalQtyText").innerText = totalQty;
+      let html = '';
+      data.forEach(item => {
+        let categoryBadge = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        if (item.category === 'PBP') categoryBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+        if (item.category === 'NON IKD') categoryBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+        let currentStatus = (item.status && item.status.trim().toUpperCase() === 'COMPLETED') ? 'COMPLETED' : 'PLANNED';
+
+        let statusBadgeClass = (currentStatus === 'COMPLETED') ? 
+          'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold' : 
+          'bg-purple-50 text-purple-700 border-purple-200 font-semibold';
+
+        let actionButtons = userRole === "GEELY" ? `
+          <button onclick="editData('${item.rowId}')" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button onclick="deleteData('${item.rowId}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"><i class="fa-solid fa-trash"></i> Delete</button>` : `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
+
+        html += `
+          <tr class="hover:bg-purple-50/50 transition">
+            <td class="px-3 py-3 text-slate-600 font-semibold">${item.tanggal || ''}</td>
+            <td class="px-3 py-3 font-bold text-slate-800">${item.poBatchNo || ''}</td>
+            <td class="px-3 py-3 font-semibold text-purple-700">${item.model || ''}</td>
+            <td class="px-3 py-3 text-slate-600">${item.type || ''}</td>
+            <td class="px-3 py-3 text-slate-600">${item.origin || ''} &rarr; ${item.destination || ''}</td>
+            <td class="px-3 py-3 text-slate-600">${item.truckType || ''}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-800">${item.qtyContainer || ''}</td>
+            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${item.category || ''}</span></td>
+            <td class="px-3 py-3 text-slate-600">${item.notes || "-"}</td>
+            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadgeClass}">${currentStatus}</span></td>
+            <td class="px-3 py-3 text-center space-x-1">${actionButtons}</td>
+          </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function filterOpsTable() {
+      const query = document.getElementById("searchOps").value.toLowerCase();
+      const category = document.getElementById("opsCategoryFilter").value;
+      const selectedDashboardDate = document.getElementById("filterDashboardDate").value;
+
+      const filtered = allOperational.filter(item => {
+        const itemDate = item.tanggal ? item.tanggal.split('T')[0] : '';
+        const matchesDate = !selectedDashboardDate || itemDate === selectedDashboardDate;
+        
+        const matchesQuery = !query || (
+          (item.poBatchNo && item.poBatchNo.toLowerCase().includes(query)) || 
+          (item.trip && item.trip.toLowerCase().includes(query)) || 
+          (item.status && item.status.toLowerCase().includes(query)) || 
+          (item.model && item.model.toLowerCase().includes(query)) || 
+          (item.category && item.category.toLowerCase().includes(query)) || 
+          (item.origin && item.origin.toLowerCase().includes(query)) || 
+          (item.destination && item.destination.toLowerCase().includes(query)) || 
+          (item.notes && item.notes.toLowerCase().includes(query))
+        );
+        const matchesCategory = category === "" || item.category === category;
+        return matchesDate && matchesQuery && matchesCategory;
+      });
+      renderOpsTable(filtered);
+    }
+
+    function normalizeCond(raw) {
+      const c = String(raw || 'GOOD').trim().toUpperCase();
+      if (c === 'DAMAGE' || c === 'DAMAGED') return 'DAMAGE';
+      if (c.includes('DENT') || c.includes('SCRATCH')) return 'DENT & SCRATCH';
+      return 'GOOD';
+    }
+
+    function getCondStyle(cond) {
+      if (cond === 'DAMAGE') return 'text-rose-600 font-bold';
+      if (cond === 'DENT & SCRATCH') return 'text-amber-600 font-bold';
+      if (cond === 'GOOD') return 'text-emerald-600 font-bold';
+      return 'text-slate-400';
+    }  
+
+    function renderOpsTable(data) {
+      const tbody = document.getElementById("tableOpsBody");
+      const selectedDashboardDate = document.getElementById("filterDashboardDate").value;
+
+      const filteredOps = (data || []).filter(s => {
+        const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+        return !selectedDashboardDate || itemDate === selectedDashboardDate;
+      });
+
+      if (!filteredOps || filteredOps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" class="text-center py-12 text-slate-400">No operational shipment data found for the selected dashboard date.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      filteredOps.forEach(item => {
+        let categoryBadge = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        if (item.category === 'PBP') categoryBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+        if (item.category === 'NON IKD') categoryBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+        let statusBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+        if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
+          statusBadge = 'bg-amber-100 text-amber-800 border-amber-300 font-bold';
+        } else if (item.status === 'RECEIVED / UNLOADED') {
+          statusBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        }
+
+        let isReceived = item.status === 'RECEIVED / UNLOADED';
+        let displayQtyCase = isReceived ? (item.unloadQty || "-") : "-";
+
+        let displayCond = "-";
+        let condStyle = 'text-slate-400';
+        if (isReceived) {
+          displayCond = normalizeCond(item.materialCond);
+          condStyle = getCondStyle(displayCond);
+        }
+
+        let actionButtons = '';
+        if (userRole === "RECEIVING") {
+          if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
+            actionButtons = `<button onclick="openUnloadingModal('${item.rowId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
+          } else if (isReceived) {
+            actionButtons = `<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
+          } else {
+            actionButtons = `<span class="text-slate-400 italic text-[11px]">Waiting Outbound</span>`;
+          }
+        } else if (userRole === "GEELY" || userRole === "MERITAR") {
+          if (item.status === 'SCHEDULED') {
+            actionButtons = `
+              <button onclick="editData('${item.rowId}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="openOutboundModal('${item.rowId}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center me-1 cursor-pointer"><i class="fa-solid fa-paper-plane"></i> Outbound</button>
+              <button disabled class="px-2 py-1 bg-slate-300 text-slate-500 text-[10px] font-bold rounded-lg inline-flex items-center cursor-not-allowed opacity-60"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
+          } else if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
+            actionButtons = `
+              <button onclick="editData('${item.rowId}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="openUnloadingModal('${item.rowId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
+          } else {
+            actionButtons = `<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
+          }
+        } else {
+          actionButtons = `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
+        }
+
+        let deleteBtn = (userRole === "GEELY") ? `<button onclick="deleteData('${item.rowId}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded-lg ms-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : '';
+
+        html += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="px-3 py-3 text-slate-600">${item.tanggal}</td>
+            <td class="px-3 py-3 font-semibold text-slate-800">${item.poBatchNo}</td>
+            <td class="px-3 py-3 font-semibold text-purple-700">${item.model}</td>
+            <td class="px-3 py-3 text-slate-600">${item.type}</td>
+            <td class="px-3 py-3 text-slate-600">${item.origin} &rarr; ${item.destination}</td>
+            <td class="px-3 py-3 text-slate-600">${item.truckType}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-700">${item.trip || "-"}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-800">${item.qtyContainer}</td>
+            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${item.category}</span></td>
+            <td class="px-3 py-3 text-slate-600">${item.notes || "-"}</td>
+            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadge}">${item.status}</span></td>
+            <td class="px-3 py-3 font-semibold text-slate-700">${displayQtyCase}</td>
+            <td class="px-3 py-3 ${condStyle}">${displayCond}</td>
+            <td class="px-3 py-3 text-center space-x-1">${actionButtons} ${deleteBtn}</td>
+          </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function getOpsExportDate() {
+      const d = document.getElementById("exportOpsDate");
+      return (d && d.value) ? d.value : document.getElementById("filterDashboardDate").value;
+    }
+
+    function getOpsExportData() {
+      const date = getOpsExportDate();
+      const category = document.getElementById("opsCategoryFilter").value;
+      return allOperational.filter(s => {
+      const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+      return itemDate === date && (category === "" || s.category === category);
+      });
+    }
+
+    function withFreshData(callback) {
+      const selectedDate = document.getElementById("filterDashboardDate").value;
+      google.script.run
+      .withSuccessHandler(function(res) {
+      allPlanning = res.planning || [];
+      allOperational = res.operational || [];
+      callback();
+    })
+      .withFailureHandler(function() { callback(); })
+      .getTMSData(selectedDate);
+  }
+
+    function exportToExcel(type) { withFreshData(function() { exportToExcelNow(type); }); }
+    function exportToPDF(type) { withFreshData(function() { exportToPDFNow(type); }); }
+
+    function exportToExcelNow(type) {
+      const selectedPlanDate = document.getElementById("filterPlanDate").value;
+      const dataToExport = type === 'planning' ? 
+        allPlanning.filter(s => !selectedPlanDate || (s.tanggal && s.tanggal.split('T')[0] === selectedPlanDate)) : 
+        getOpsExportData();
+
+      if (!dataToExport || dataToExport.length === 0) return showAlert("No data available to export!", "error");
+
+      let exportData = type === 'planning' ? dataToExport.map(s => {
+        let isCompleted = String(s.status || '').trim().toUpperCase() === 'COMPLETED';
+        return {
+          "Plan Date": s.tanggal, "PO No": s.poBatchNo, "Model": s.model, "Type": s.type, "Origin": s.origin, "Destination": s.destination, "Truck": s.truckType, "Container Qty": s.qtyContainer, "Category": s.category, "Remarks": s.notes || "-", "Status": isCompleted ? "COMPLETED" : "PLANNED"
+        };
+      }) : dataToExport.map(s => {
+        let isRec = s.status === 'RECEIVED / UNLOADED';
+        let xQty = isRec ? (s.unloadQty || "-") : "-";
+        let xCond = isRec ? normalizeCond(s.materialCond) : "-";
+        return {
+          "Delivery Date": s.tanggal, "PO No": s.poBatchNo, "Model": s.model, "Type": s.type, "Origin": s.origin, "Destination": s.destination, "Truck": s.truckType, "Trip": s.trip, "Container Qty": s.qtyContainer, "Category": s.category, "Remarks": s.notes || "-", "Status": s.status, "Qty Case": xQty, "Case Condition": xCond
+        };
+      });
+
+      if (type === 'planning') {
+        const totalQtyPlan = dataToExport.reduce((sum, i) => sum + (parseInt(i.qtyContainer) || 0), 0);
+        exportData.push({ "Plan Date": "TOTAL", "PO No": dataToExport.length + " Plans", "Container Qty": totalQtyPlan });
+      }
+
+      const filename = type === 'planning' ? "TMS_Delivery_Planning.xlsx" : "TMS_Operational_Report_" + getOpsExportDate() + ".xlsx";
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Report");
+      XLSX.writeFile(wb, filename);
+      showAlert("Excel report downloaded successfully!", "success");
+    }
+
+    function exportToPDFNow(type) {
+      const selectedPlanDate = document.getElementById("filterPlanDate").value;
+      const dataToExport = type === 'planning' ? 
+        allPlanning.filter(s => !selectedPlanDate || (s.tanggal && s.tanggal.split('T')[0] === selectedPlanDate)) : 
+        getOpsExportData();
+
+      if (!dataToExport || dataToExport.length === 0) return showAlert("No data available to export!", "error");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      
+      doc.setFontSize(16);
+      doc.text(type === 'planning' ? "Delivery Planning Report" : "Operational TMS Report - " + getOpsExportDate(), 14, 15);
+
+      const now = new Date();
+      const generatedDateStr = "Generated Date: " + now.getFullYear() + '-' + 
+        ('0' + (now.getMonth() + 1)).slice(-2) + '-' + 
+        ('0' + now.getDate()).slice(-2) + ' ' + 
+        ('0' + now.getHours()).slice(-2) + ':' + 
+        ('0' + now.getMinutes()).slice(-2) + ':' + 
+        ('0' + now.getSeconds()).slice(-2);
+
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(generatedDateStr, 14, 21);
+
+      const totalQtyPlan = (type === 'planning')
+      ? dataToExport.reduce((sum, i) => sum + (parseInt(i.qtyContainer) || 0), 0)
+      : 0;
+
+    if (type === 'planning') {
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Total Plan: " + dataToExport.length + " Plans  |  Total Container: " + totalQtyPlan + " Container", 14, 27);
+    }
+
+      let headers = type === 'planning' ? 
+        [["Plan Date", "PO No", "Model", "Type", "Route", "Truck", "Qty", "Category", "Remarks", "Status"]] : 
+        [["Delivery Date", "PO No", "Model", "Type", "Route", "Truck", "Trip", "Qty", "Category", "Status", "Qty Case", "Case Condition"]];
+      
+      let rows = type === 'planning' ? dataToExport.map(s => {
+        let isCompleted = String(s.status || '').trim().toUpperCase() === 'COMPLETED';
+        return [s.tanggal, s.poBatchNo, s.model, s.type, `${s.origin} -> ${s.destination}`, s.truckType, s.qtyContainer, s.category, s.notes || "-", isCompleted ? "COMPLETED" : "PLANNED"];
+      }) : dataToExport.map(s => {
+        let isRec = s.status === 'RECEIVED / UNLOADED';
+        let pQtyCase = isRec ? (s.unloadQty || "-") : "-";
+        let pCond = isRec ? normalizeCond(s.materialCond) : "-";
+        return [s.tanggal, s.poBatchNo, s.model, s.type, `${s.origin} -> ${s.destination}`, s.truckType, s.trip, s.qtyContainer, s.category, s.status, pQtyCase, pCond];
+      });
+
+      doc.autoTable({
+      head: headers,
+      body: rows,
+      foot: type === 'planning'
+     ? [[{ content: 'TOTAL', colSpan: 6, styles: { halign: 'right' } }, { content: totalQtyPlan + ' Container', colSpan: 4 }]]
+      : undefined,
+    startY: type === 'planning' ? 31 : 26,
+    styles: { fontSize: 8 }
+    });
+      doc.save(type === 'planning' ? "Delivery_Planning.pdf" : "Operational_Report_" + getOpsExportDate() + ".pdf");
+      showAlert("PDF report downloaded successfully!", "success");
+    }
+
+    function openModal(isSchedule) {
+      if (userRole === "GUEST" || userRole === "RECEIVING") return showAlert("Access Denied!", "error");
+      if (!isSchedule && userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can create Delivery Plan.", "error");
+
+      document.getElementById("tmsForm").reset();
+      document.getElementById("rowId").value = "";
+      document.getElementById("isScheduleFlag").value = isSchedule ? "true" : "false";
+      
+      const badge = document.getElementById("autoFillBadge");
+      if (badge) badge.classList.add("hidden");
+
+      const modalTitle = document.getElementById("modalTitle");
+      const tripContainer = document.getElementById("tripContainer");
+      const tripInput = document.getElementById("trip");
+
+      if (isSchedule) {
+        modalTitle.innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-400"></i> Schedule Delivery Form`;
+        tripContainer.classList.remove("hidden"); tripInput.required = true;
+      } else {
+        modalTitle.innerHTML = `<i class="fa-solid fa-truck"></i> Delivery Plan Form`;
+        tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
+      }
+
+      document.getElementById("category").value = "KD";
+      document.getElementById("model").value = "E245";
+      document.getElementById("type").value = "Body Cabin";
+      document.getElementById("qtyContainer").value = "1";
+      document.getElementById("tanggal").valueAsDate = new Date();
+      document.getElementById("shipmentModal").classList.remove("hidden");
+      document.getElementById("shipmentModal").classList.add("flex");
+    }
+
+    function editData(rowId) {
+      if (userRole === "GUEST" || userRole === "RECEIVING") return showAlert("Access Denied!", "error");
+      
+      let item = null;
+      let isOpsItem = rowId.startsWith("O_");
+      
+      if (isOpsItem) {
+        item = allOperational.find(s => s.rowId == rowId);
+      } else {
+        item = allPlanning.find(s => s.rowId == rowId);
+      }
+      
+      if (!item) return;
+
+      const badge = document.getElementById("autoFillBadge");
+      if (badge) badge.classList.add("hidden");
+
+      document.getElementById("rowId").value = item.rowId;
+      document.getElementById("isScheduleFlag").value = isOpsItem ? "true" : "false";
+      document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit ${isOpsItem ? 'Operational Delivery' : 'Delivery Plan'}`;
+
+      const tripContainer = document.getElementById("tripContainer");
+      const tripInput = document.getElementById("trip");
+      if (isOpsItem) {
+        tripContainer.classList.remove("hidden"); tripInput.required = true; tripInput.value = item.trip || "";
+      } else {
+        tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
+      }
+
+      document.getElementById("tanggal").value = item.tanggal;
+      document.getElementById("poBatchNo").value = item.poBatchNo;
+      document.getElementById("model").value = item.model || "E245";
+      document.getElementById("type").value = item.type || "Body Cabin";
+      document.getElementById("origin").value = item.origin;
+      document.getElementById("destination").value = item.destination;
+      document.getElementById("truckType").value = item.truckType;
+      document.getElementById("qtyContainer").value = item.qtyContainer || 1;
+      document.getElementById("category").value = item.category || "KD";
+      document.getElementById("notes").value = item.notes || "";
+
+      document.getElementById("shipmentModal").classList.remove("hidden");
+      document.getElementById("shipmentModal").classList.add("flex");
+    }
+
+    function openOutboundModal(rowId) {
+      if (userRole === "GUEST" || userRole === "RECEIVING") return showAlert("Access Denied!", "error");
+      const item = allOperational.find(s => s.rowId == rowId);
+      if (!item) return;
+      document.getElementById("outboundRowId").value = item.rowId;
+      document.getElementById("outboundPoBatchNo").value = item.poBatchNo;
+      document.getElementById("outboundModal").classList.remove("hidden");
+      document.getElementById("outboundModal").classList.add("flex");
+    }
+
+    function openUnloadingModal(rowId) {
+      if (userRole === "GUEST") return showAlert("Access Denied!", "error");
+      const item = allOperational.find(s => s.rowId == rowId);
+      if (!item) return;
+      document.getElementById("unloadRowId").value = item.rowId;
+      document.getElementById("unloadPoBatchNo").value = item.poBatchNo;
+      document.getElementById("unloadQty").value = item.qtyContainer || "";
+      document.getElementById("materialCond").value = "GOOD";
+      document.getElementById("unloadingModal").classList.remove("hidden");
+      document.getElementById("unloadingModal").classList.add("flex");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+      document.getElementById(id).classList.remove("flex");
+    }
+
+    function saveData(e) {
+      e.preventDefault();
+      const isSchedule = document.getElementById("isScheduleFlag").value === "true";
+      const form = {
+        rowId: document.getElementById("rowId").value,
+        tanggal: document.getElementById("tanggal").value,
+        poBatchNo: document.getElementById("poBatchNo").value,
+        model: document.getElementById("model").value,
+        type: document.getElementById("type").value,
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        truckType: document.getElementById("truckType").value,
+        trip: isSchedule ? document.getElementById("trip").value : "-",
+        qtyContainer: document.getElementById("qtyContainer").value,
+        category: document.getElementById("category").value,
+        notes: document.getElementById("notes").value,
+        isSchedule: isSchedule
+      };
+
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.success) {
+          showAlert(res.message, 'success');
+          closeModal("shipmentModal");
+          loadData();
+        } else {
+          showAlert("Failed to save data!", 'error');
+        }
+      }).saveShipment(form);
+    }
+
+    function submitOutbound(e) {
+      e.preventDefault();
+      const form = { rowId: document.getElementById("outboundRowId").value };
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.success) {
+          showAlert(res.message, 'success');
+          closeModal("outboundModal");
+          loadData();
+        } else {
+          showAlert("Failed!", 'error');
+        }
+      }).processOutbound(form);
+    }
+
+    function submitUnloading(e) {
+      e.preventDefault();
+      const form = {
+        rowId: document.getElementById("unloadRowId").value,
+        unloadQty: document.getElementById("unloadQty").value,
+        materialCond: document.getElementById("materialCond").value
+      };
+      google.script.run.withSuccessHandler(function(res) {
+        if (res.success) {
+          showAlert(res.message, 'success');
+          closeModal("unloadingModal");
+          loadData();
+        } else {
+          showAlert("Failed!", 'error');
+        }
+      }).processUnloading(form);
+    }
+
+    function deleteData(rowId) {
+      if (userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can delete data.", "error");
+      selectedRowToDelete = rowId;
+      const modal = document.getElementById("customConfirmModal");
+      modal.classList.remove("hidden"); modal.classList.add("flex");
+      document.getElementById("btnConfirmDelete").onclick = function() { executeDelete(); };
+    }
+
+    function closeConfirmModal() {
+      selectedRowToDelete = null;
+      document.getElementById("customConfirmModal").classList.add("hidden");
+      document.getElementById("customConfirmModal").classList.remove("flex");
+    }
+
+    function executeDelete() {
+      if (!selectedRowToDelete) return;
+      google.script.run.withSuccessHandler(function(res) {
+        closeConfirmModal();
+        if (res.success) {
+          showAlert(res.message, 'success');
+          loadData();
+        } else {
+          showAlert("Failed to delete record!", 'error');
+        }
+      }).deleteShipment(selectedRowToDelete);
+    }
+
+    function showAlert(message, type = 'success') {
+      const modal = document.getElementById('customAlert');
+      const iconBg = document.getElementById('alertIconBg');
+      const icon = document.getElementById('alertIcon');
+      const title = document.getElementById('alertTitle');
+      const msg = document.getElementById('alertMessage');
+
+      if (type === 'success') {
+        iconBg.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto mb-3 flex items-center justify-center";
+        icon.className = "fa-solid fa-check text-3xl"; title.innerText = "Success!";
+      } else {
+        iconBg.className = "w-16 h-16 bg-rose-100 text-rose-600 rounded-full mx-auto mb-3 flex items-center justify-center";
+        icon.className = "fa-solid fa-xmark text-3xl"; title.innerText = "Error!";
+      }
+      msg.innerText = message;
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+
+    function closeCustomAlert() {
+      document.getElementById('customAlert').classList.add('hidden');
+      document.getElementById('customAlert').classList.remove('flex');
+    }
+  </script>
+</body>
+</html>
