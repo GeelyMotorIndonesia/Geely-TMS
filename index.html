@@ -197,7 +197,7 @@
         <div class="bg-white p-3.5 sm:p-5 rounded-xl shadow-sm border border-slate-200/80 flex items-center justify-between">
           <div>
             <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">DAILY VARIANCE</p>
-            <h3 id="statVariance" class="text-2xl sm:text-3xl font-black text-rose-600 mt-1">0</h3>
+            <h3 id="statVariance" class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">0</h3>
             <p id="lblDateVariance" class="text-[9px] text-slate-400 mt-0.5">Selected Date</p>
           </div>
           <div class="p-3 bg-rose-50 text-rose-600 rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
@@ -828,7 +828,7 @@
       document.getElementById("statTotalOps").innerText = stats.total || 0;
       document.getElementById("statUnloaded").innerText = stats.unloaded || 0;
       document.getElementById("statWip").innerText = currentWipCount;
-      // Variance color: green when unloaded is above plan (+), red when below plan (-), grey when equal.
+      // Variance color: green when unloaded is above plan (+), red when below plan (-), black when equal.
       // Shown as +N when above plan and -N when below plan.
       (function() {
         const el = document.getElementById("statVariance");
@@ -837,8 +837,8 @@
         const dir = isNaN(signed) ? 0 : Math.sign(signed);
         const sign = dir > 0 ? "+" : (dir < 0 ? "-" : "");
         el.innerText = sign + absVal;
-        el.classList.remove("text-rose-600", "text-emerald-600", "text-slate-400");
-        el.classList.add(dir > 0 ? "text-emerald-600" : (dir < 0 ? "text-rose-600" : "text-slate-400"));
+        el.classList.remove("text-rose-600", "text-emerald-600", "text-slate-400", "text-slate-900");
+        el.classList.add(dir > 0 ? "text-emerald-600" : (dir < 0 ? "text-rose-600" : "text-slate-900"));
         el.title = dir > 0 ? "Above plan" : (dir < 0 ? "Below plan" : "Equal to plan");
       })();
       
