@@ -4,6 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="no-referrer">
   <title>GTMS & Material Receiving System</title>
 
   <meta name="mobile-web-app-capable" content="yes">
@@ -115,8 +116,8 @@
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-semibold self-end md:self-center me-2">
-        <span>Total Master Plans: <span id="planTotalText" class="text-purple-700 font-bold">0 Plans</span></span>
-        <span>Total Container Qty: <span id="planTotalQtyText" class="text-purple-700 font-bold">0</span></span>
+          <span>Total Master Plans: <span id="planTotalText" class="text-purple-700 font-bold">0 Plans</span></span>
+          <span>Total Container Qty: <span id="planTotalQtyText" class="text-purple-700 font-bold">0</span></span>
         </div>
       </div>
 
@@ -216,11 +217,11 @@
             <option value="NON IKD">NON IKD</option>
           </select>
           <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Kosongkan untuk mengikuti Dashboard Date">
+            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Leave empty to follow the Dashboard Date">
               <i class="fa-solid fa-file-export text-indigo-600 text-xs"></i>
               <span class="text-[11px] font-bold text-slate-600">Export Date:</span>
               <input type="date" id="exportOpsDate" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
-              <button type="button" onclick="document.getElementById('exportOpsDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Ikuti Dashboard Date"><i class="fa-solid fa-xmark"></i></button>
+              <button type="button" onclick="document.getElementById('exportOpsDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Follow Dashboard Date"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <button onclick="exportToExcel('operational')" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold rounded-xl cursor-pointer">Excel</button>
             <button onclick="exportToPDF('operational')" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold rounded-xl cursor-pointer">PDF</button>
@@ -260,22 +261,22 @@
   </main>
 
   <!-- Modals -->
-  <div id="pinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[110] p-4">
+  <div id="pinModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[110] p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 text-center">
       <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"><i class="fa-solid fa-user-shield"></i></div>
       <h3 class="text-base font-bold text-slate-800 mb-1">Admin Login</h3>
       <p class="text-xs text-slate-500 mb-4">Enter Geely, Meritar, or Receiving PIN.</p>
-      <form onsubmit="verifyPin(event)" class="space-y-4">
-        <input type="password" id="pinInput" placeholder="Enter Admin PIN" class="w-full text-center px-4 py-2.5 border rounded-xl text-sm font-bold tracking-widest focus:ring-2 focus:ring-purple-500 outline-none" required>
+      <form onsubmit="verifyPin(event)" class="space-y-4" autocomplete="off">
+        <input type="password" id="pinInput" autocomplete="off" placeholder="Enter Admin PIN" class="w-full text-center px-4 py-2.5 border rounded-xl text-sm font-bold tracking-widest focus:ring-2 focus:ring-purple-500 outline-none" required>
         <div class="flex gap-2">
           <button type="button" onclick="closeModal('pinModal')" class="w-1/2 py-2.5 bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl cursor-pointer">Cancel</button>
-          <button type="submit" class="w-1/2 py-2.5 bg-purple-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer">Login</button>
+          <button type="submit" id="btnPinSubmit" class="w-1/2 py-2.5 bg-purple-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer">Login</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div id="shipmentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
+  <div id="shipmentModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden my-auto">
       <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white">
         <h3 id="modalTitle" class="text-base font-bold flex items-center gap-2"><i class="fa-solid fa-truck"></i> Delivery Plan Form</h3>
@@ -294,7 +295,7 @@
               <span>PO No / Batch No</span>
               <span id="autoFillBadge" class="hidden text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-bolt"></i> Auto-filled</span>
             </label>
-            <input type="text" id="poBatchNo" list="planningPoOptions" oninput="autoFillFromPlanning()" placeholder="Enter / Select PO No" class="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 outline-none" required>
+            <input type="text" id="poBatchNo" list="planningPoOptions" oninput="autoFillFromPlanning()" maxlength="40" placeholder="Enter / Select PO No" class="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 outline-none" required>
             <datalist id="planningPoOptions"></datalist>
           </div>
           <div>
@@ -311,11 +312,11 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Origin Location</label>
-            <input type="text" id="origin" placeholder="Origin" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+            <input type="text" id="origin" maxlength="40" placeholder="Origin" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Destination Location</label>
-            <input type="text" id="destination" placeholder="Destination" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
+            <input type="text" id="destination" maxlength="40" placeholder="Destination" class="w-full px-3 py-2 border rounded-xl text-xs outline-none" required>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Truck Type</label>
@@ -325,7 +326,7 @@
           </div>
           <div id="tripContainer">
             <label class="block text-xs font-semibold text-slate-600 mb-1">Trip Number / Batch</label>
-            <input type="text" id="trip" placeholder="e.g. Trip 1" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
+            <input type="text" id="trip" maxlength="20" placeholder="e.g. Trip 1" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Container Qty</label>
@@ -339,7 +340,7 @@
           </div>
           <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-600 mb-1">Special Notes / Remarks (Optional)</label>
-            <input type="text" id="notes" placeholder="Remarks" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
+            <input type="text" id="notes" maxlength="200" placeholder="Remarks" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
           </div>
         </div>
         <div class="pt-3 flex justify-end gap-2.5 border-t">
@@ -350,7 +351,7 @@
     </div>
   </div>
 
-  <div id="outboundModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div id="outboundModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
       <div class="bg-amber-600 px-5 py-3.5 flex justify-between items-center text-white">
         <h3 class="text-base font-bold"><i class="fa-solid fa-paper-plane"></i> Outbound Form</h3>
@@ -371,7 +372,7 @@
     </div>
   </div>
 
-  <div id="unloadingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div id="unloadingModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
       <div class="bg-emerald-700 px-5 py-3.5 flex justify-between items-center text-white">
         <h3 class="text-base font-bold"><i class="fa-solid fa-box-check"></i> Receiving Form</h3>
@@ -390,9 +391,9 @@
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Case Condition</label>
           <select id="materialCond" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none" required>
-          <option value="GOOD">GOOD</option>
-          <option value="DAMAGE">DAMAGE</option>
-          <option value="DENT &amp; SCRATCH">DENT &amp; SCRATCH</option>
+            <option value="GOOD">GOOD</option>
+            <option value="DAMAGE">DAMAGE</option>
+            <option value="DENT &amp; SCRATCH">DENT &amp; SCRATCH</option>
           </select>
         </div>
         <div class="pt-3 flex justify-end gap-2.5 border-t">
@@ -403,7 +404,7 @@
     </div>
   </div>
 
-  <div id="customConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[120] p-4">
+  <div id="customConfirmModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[120] p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
       <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full mx-auto mb-3 flex items-center justify-center text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <h3 class="text-base font-bold text-slate-800 mb-1">Delete Confirmation</h3>
@@ -415,7 +416,7 @@
     </div>
   </div>
 
-  <div id="customAlert" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+  <div id="customAlert" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[100] p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
       <div id="alertIconBg" class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center"><i id="alertIcon" class="text-3xl"></i></div>
       <h3 id="alertTitle" class="text-base font-bold mb-1">Notification</h3>
@@ -425,13 +426,57 @@
   </div>
 
   <script>
+    // ===================== CONFIGURATION =====================
+    // Fill this ONLY if this page is opened outside Apps Script (e.g. GitHub Pages).
+    // Contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
+    // Leave empty ("") if the page is opened through the Apps Script link itself.
+    const API_URL = "";
+
+    // Replacement for google.script.run when the page is opened outside Apps Script
+    if (typeof google === "undefined" || !google.script) {
+      const makeRunner = (success, failure) => new Proxy({}, {
+        get(_, prop) {
+          if (prop === "withSuccessHandler") return fn => makeRunner(fn, failure);
+          if (prop === "withFailureHandler") return fn => makeRunner(success, fn);
+          return (...args) => {
+            if (!API_URL) {
+              console.error("API_URL has not been set in Index.html");
+              if (failure) setTimeout(() => failure(new Error("API_URL has not been set")), 0);
+              return;
+            }
+            fetch(API_URL, {
+              method: "POST",
+              redirect: "follow",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({ fn: prop, args: args })
+            })
+              .then(r => r.json())
+              .then(res => {
+                if (res && res.__error) throw new Error(res.__error);
+                if (success) success(res);
+              })
+              .catch(err => { if (failure) failure(err); });
+          };
+        }
+      });
+      window.google = { script: { run: makeRunner(null, null) } };
+    }
+
+    // ===================== STATE =====================
     let allPlanning = [];
     let allOperational = [];
-    let userRole = localStorage.getItem("tms_user_role") || "GUEST";
-    const PIN_GEELY = "Geely@2026";
-    const PIN_MERITAR = "Meritar@2026";
-    const PIN_RECEIVING = "Receiving@2026";
+    let userRole = "GUEST";
+    let sessionToken = localStorage.getItem("tms_token") || "";
+    let authBlocked = false;          // true = server requires login before data is shown
     let selectedRowToDelete = null;
+    let selectedPoToDelete = "";
+
+    // Escapes data text before it is inserted into HTML
+    function esc(v) {
+      return String(v == null ? "" : v).replace(/[&<>"']/g, function(c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
       const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -448,45 +493,126 @@
       const datePicker = document.getElementById("filterDashboardDate");
       if (datePicker) datePicker.value = today;
 
-      loadData();
-      updateAuthUI();
+      // clean up the old stored role (the previous version kept the role in the browser)
+      localStorage.removeItem("tms_user_role");
 
-      setInterval(refreshData, 2000);
+      initSession(function() {
+        updateAuthUI();
+        loadData();
+        scheduleNextRefresh();
+      });
+
+      // instant refresh when the tab/phone becomes active again or the internet reconnects
+      document.addEventListener("visibilitychange", function() { if (!document.hidden) refreshData(); });
+      window.addEventListener("focus", refreshData);
+      window.addEventListener("online", refreshData);
     });
 
+    // ===================== LOGIN SESSION =====================
+    function initSession(done) {
+      if (!sessionToken) return done();
+      google.script.run
+        .withSuccessHandler(function(r) {
+          userRole = (r && r.role && r.role !== "GUEST") ? r.role : "GUEST";
+          if (userRole === "GUEST") {
+            sessionToken = "";
+            localStorage.removeItem("tms_token");
+          }
+          done();
+        })
+        .withFailureHandler(function() { done(); })
+        .whoAmI(sessionToken);
+    }
+
+    // Called when the server reports that the session is missing/expired
+    function handleAuthLost(showMsg) {
+      const hadSession = !!sessionToken;
+      const wasBlocked = authBlocked;
+      userRole = "GUEST";
+      sessionToken = "";
+      localStorage.removeItem("tms_token");
+      authBlocked = true;
+      allPlanning = [];
+      allOperational = [];
+      lastDataSignature = "";
+      updateBadgesAndKPI({ total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: document.getElementById("filterDashboardDate").value });
+      updateAuthUI();
+      populatePoDatalist();
+
+      if (hadSession && showMsg) {
+        showAlert("Session expired. Please login again.", "error");
+      } else if (!wasBlocked && !isAnyModalOpen()) {
+        openPinModal();
+      }
+    }
+
+    // ===================== AUTO REFRESH =====================
     let isFetching = false;
-let lastDataSignature = "";
+    let fetchStartedAt = 0;
+    let lastRequestId = 0;
+    let refreshTimer = null;
+    let lastDataSignature = "";
+    const REFRESH_MS = 5000;          // delay between refreshes (5 seconds)
+    const FETCH_TIMEOUT_MS = 20000;   // requests hanging longer than this are treated as failed
 
-function isAnyModalOpen() {
-  return ['shipmentModal', 'outboundModal', 'unloadingModal', 'pinModal', 'customAlert', 'customConfirmModal']
-    .some(id => !document.getElementById(id).classList.contains('hidden'));
-}
+    function isAnyModalOpen() {
+      return ['shipmentModal', 'outboundModal', 'unloadingModal', 'pinModal', 'customAlert', 'customConfirmModal']
+        .some(id => !document.getElementById(id).classList.contains('hidden'));
+    }
 
-function refreshData() {
-  // jangan menumpuk, jangan jalan saat tab tidak aktif atau ada popup terbuka
-  if (isFetching || document.hidden || isAnyModalOpen()) return;
-  isFetching = true;
+    function scheduleNextRefresh(delay) {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(refreshData, delay == null ? REFRESH_MS : delay);
+    }
 
-  const selectedDate = document.getElementById("filterDashboardDate").value;
-  google.script.run
-    .withSuccessHandler(function(res) {
-      isFetching = false;
-      if (isAnyModalOpen()) return;   // data yang datang saat popup tampil diabaikan, nanti diambil lagi
-      const signature = JSON.stringify(res);
-      if (signature === lastDataSignature) return;   // data sama, tidak perlu render ulang
-      lastDataSignature = signature;
-
+    function renderAll(res, selectedDate) {
       allPlanning = res.planning || [];
       allOperational = res.operational || [];
       updateBadgesAndKPI(res.stats || { total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: selectedDate });
       filterPlanningTable();
       renderOpsTable(allOperational);
       populatePoDatalist();
-    })
-    .withFailureHandler(function() { isFetching = false; })
-    .getTMSData(selectedDate);
-}
-    
+    }
+
+    function refreshData() {
+      // safeguard: a request hanging too long is treated as failed
+      if (isFetching && Date.now() - fetchStartedAt > FETCH_TIMEOUT_MS) isFetching = false;
+
+      if (isFetching || document.hidden || isAnyModalOpen() || (authBlocked && !sessionToken)) {
+        scheduleNextRefresh();
+        return;
+      }
+
+      isFetching = true;
+      fetchStartedAt = Date.now();
+      const requestId = ++lastRequestId;
+      const selectedDate = document.getElementById("filterDashboardDate").value;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (requestId !== lastRequestId) return;   // stale response, ignore
+          isFetching = false;
+          scheduleNextRefresh();
+
+          if (res && res.authRequired) { handleAuthLost(true); return; }
+          if (isAnyModalOpen()) return;
+          if (selectedDate !== document.getElementById("filterDashboardDate").value) return;
+
+          const signature = JSON.stringify(res);
+          if (signature === lastDataSignature && !authBlocked) return;   // same data, no need to re-render
+          lastDataSignature = signature;
+          authBlocked = false;
+          renderAll(res, selectedDate);
+        })
+        .withFailureHandler(function() {
+          if (requestId !== lastRequestId) return;
+          isFetching = false;
+          scheduleNextRefresh();
+        })
+        .getTMSData(selectedDate, sessionToken);
+    }
+
+    // ===================== LOGIN / LOGOUT =====================
     function openPinModal() {
       document.getElementById("pinInput").value = "";
       document.getElementById("pinModal").classList.remove("hidden");
@@ -495,37 +621,54 @@ function refreshData() {
 
     function verifyPin(e) {
       e.preventDefault();
-      const inputPin = document.getElementById("pinInput").value;
-      if (inputPin === PIN_GEELY) {
-        userRole = "GEELY";
-        localStorage.setItem("tms_user_role", "GEELY");
-        closeModal("pinModal");
-        updateAuthUI();
-        showAlert("Welcome! Admin Geely Logged In", "success");
-      } else if (inputPin === PIN_MERITAR) {
-        userRole = "MERITAR";
-        localStorage.setItem("tms_user_role", "MERITAR");
-        closeModal("pinModal");
-        updateAuthUI();
-        showAlert("Welcome! Admin Meritar Logged In", "success");
-      } else if (inputPin === PIN_RECEIVING) {
-        userRole = "RECEIVING";
-        localStorage.setItem("tms_user_role", "RECEIVING");
-        closeModal("pinModal");
-        updateAuthUI();
-        switchTab('operational');
-        showAlert("Welcome! Receiving Staff Logged In", "success");
-      } else {
-        showAlert("Incorrect PIN Access!", "error");
-      }
+      const input = document.getElementById("pinInput");
+      const btn = document.getElementById("btnPinSubmit");
+      const inputPin = input.value;
+      input.blur();
+      btn.disabled = true;
+      btn.innerText = "Checking...";
+
+      const reset = function() { btn.disabled = false; btn.innerText = "Login"; input.value = ""; };
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          reset();
+          if (!res || !res.success) {
+            showAlert((res && res.message) || "Incorrect PIN Access!", "error");
+            return;
+          }
+          userRole = res.role;
+          sessionToken = res.token;
+          localStorage.setItem("tms_token", res.token);
+          authBlocked = false;
+          lastDataSignature = "";
+          closeModal("pinModal");
+          updateAuthUI();
+          loadData();
+          if (userRole === "RECEIVING") switchTab('operational');
+          const names = { GEELY: "Admin Geely", MERITAR: "Admin Meritar", RECEIVING: "Receiving Staff" };
+          showAlert("Welcome! " + names[userRole] + " Logged In", "success");
+        })
+        .withFailureHandler(function() {
+          reset();
+          showAlert("Login failed. Please check your connection and try again.", "error");
+        })
+        .login(inputPin);
     }
 
     function logoutAdmin() {
+      google.script.run.logout(sessionToken);
       userRole = "GUEST";
-      localStorage.removeItem("tms_user_role");
+      sessionToken = "";
+      localStorage.removeItem("tms_token");
+      lastDataSignature = "";
+      // after logout, data is reloaded: the server decides whether guests may view data
+      allPlanning = [];
+      allOperational = [];
       updateAuthUI();
       switchTab('operational');
       showAlert("Logged out successfully.", "success");
+      loadData();
     }
 
     function updateAuthUI() {
@@ -586,23 +729,29 @@ function refreshData() {
       }
     }
 
+    // ===================== LOADING DATA =====================
+    function showLoadError() {
+      const msg = '<td colspan="14" class="text-center py-12 text-rose-600">Failed to load data. Please check your connection.</td>';
+      document.getElementById("tablePlanningBody").innerHTML = '<tr>' + msg + '</tr>';
+      document.getElementById("tableOpsBody").innerHTML = '<tr>' + msg + '</tr>';
+    }
+
     function loadData() {
       const selectedDate = document.getElementById("filterDashboardDate").value;
-      google.script.run.withSuccessHandler(function(res) {
-        allPlanning = res.planning || [];
-        allOperational = res.operational || [];
-        
-        updateBadgesAndKPI(res.stats || { total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: selectedDate });
-        
-        const planDatePicker = document.getElementById("filterPlanDate");
-        if (planDatePicker && !planDatePicker.value) {
-          planDatePicker.value = new Date().toISOString().split('T')[0];
-        }
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.authRequired) { handleAuthLost(true); return; }
+          authBlocked = false;
+          lastDataSignature = JSON.stringify(res);
 
-        filterPlanningTable();
-        renderOpsTable(allOperational);
-        populatePoDatalist();
-      }).getTMSData(selectedDate);
+          const planDatePicker = document.getElementById("filterPlanDate");
+          if (planDatePicker && !planDatePicker.value) {
+            planDatePicker.value = new Date().toLocaleDateString('en-CA');
+          }
+          renderAll(res, selectedDate);
+        })
+        .withFailureHandler(showLoadError)
+        .getTMSData(selectedDate, sessionToken);
     }
 
     function clearPlanDateFilter() {
@@ -611,30 +760,30 @@ function refreshData() {
     }
 
     function getOpenPlans() {
-  return allPlanning.filter(p => String(p.status || '').trim().toUpperCase() !== 'COMPLETED');
-}
-
-function populatePoDatalist() {
-  const datalist = document.getElementById("planningPoOptions");
-  if (!datalist) return;
-
-  // satu entri per PO/Batch, gabungkan Type yang masih open
-  const grouped = {};
-  getOpenPlans().forEach(item => {
-    const key = item.poBatchNo;
-    if (!grouped[key]) {
-      grouped[key] = { model: item.model, route: item.origin + ' -> ' + item.destination, types: [] };
+      return allPlanning.filter(p => String(p.status || '').trim().toUpperCase() !== 'COMPLETED');
     }
-    if (!grouped[key].types.includes(item.type)) grouped[key].types.push(item.type);
-  });
 
-  let optionsHtml = '';
-  Object.keys(grouped).forEach(po => {
-    const g = grouped[po];
-    optionsHtml += `<option value="${po}">${g.model} | ${g.types.join(', ')} | ${g.route}</option>`;
-  });
-  datalist.innerHTML = optionsHtml;
-}
+    function populatePoDatalist() {
+      const datalist = document.getElementById("planningPoOptions");
+      if (!datalist) return;
+
+      // one entry per PO/Batch, merge the Types that are still open
+      const grouped = {};
+      getOpenPlans().forEach(item => {
+        const key = item.poBatchNo;
+        if (!grouped[key]) {
+          grouped[key] = { model: item.model, route: item.origin + ' -> ' + item.destination, types: [] };
+        }
+        if (!grouped[key].types.includes(item.type)) grouped[key].types.push(item.type);
+      });
+
+      let optionsHtml = '';
+      Object.keys(grouped).forEach(po => {
+        const g = grouped[po];
+        optionsHtml += `<option value="${esc(po)}">${esc(g.model + ' | ' + g.types.join(', ') + ' | ' + g.route)}</option>`;
+      });
+      datalist.innerHTML = optionsHtml;
+    }
 
     function autoFillFromPlanning() {
       const isSchedule = document.getElementById("isScheduleFlag").value === "true";
@@ -694,27 +843,28 @@ function populatePoDatalist() {
       const selectedPlanDate = document.getElementById("filterPlanDate").value;
 
       const filtered = allPlanning.filter(s => {
-      // Saat search diisi: cari di SEMUA tanggal, abaikan Plan Date
-      if (query) {
-        return [
-        s.poBatchNo, s.model, s.type, s.origin, s.destination,
-        s.truckType, s.category, s.notes, s.status, s.tanggal
-      ].some(v => v && String(v).toLowerCase().includes(query));
-    }
+        // When search has text: search ALL dates, ignore Plan Date
+        if (query) {
+          return [
+            s.poBatchNo, s.model, s.type, s.origin, s.destination,
+            s.truckType, s.category, s.notes, s.status, s.tanggal
+          ].some(v => v && String(v).toLowerCase().includes(query));
+        }
 
-      // Saat search kosong: ikuti filter Plan Date seperti biasa
-      const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
-      return !selectedPlanDate || itemDate === selectedPlanDate;
-    });
+        // When search is empty: follow the Plan Date filter as usual
+        const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+        return !selectedPlanDate || itemDate === selectedPlanDate;
+      });
 
-    renderPlanningTable(filtered);
+      renderPlanningTable(filtered);
     }
 
     function renderPlanningTable(data) {
       const tbody = document.getElementById("tablePlanningBody");
 
       if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-12 text-slate-400">No delivery planning data found for the selected date.</td></tr>`;
+        const msg = authBlocked ? "Please login to view data." : "No delivery planning data found for the selected date.";
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-12 text-slate-400">${msg}</td></tr>`;
         document.getElementById("planTotalText").innerText = "0 Plans";
         document.getElementById("planTotalQtyText").innerText = "0";
         return;
@@ -736,20 +886,20 @@ function populatePoDatalist() {
           'bg-purple-50 text-purple-700 border-purple-200 font-semibold';
 
         let actionButtons = userRole === "GEELY" ? `
-          <button onclick="editData('${item.rowId}')" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-          <button onclick="deleteData('${item.rowId}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"><i class="fa-solid fa-trash"></i> Delete</button>` : `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
+          <button onclick="editData('${esc(item.rowId)}')" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button onclick="deleteData('${esc(item.rowId)}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"><i class="fa-solid fa-trash"></i> Delete</button>` : `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
 
         html += `
           <tr class="hover:bg-purple-50/50 transition">
-            <td class="px-3 py-3 text-slate-600 font-semibold">${item.tanggal || ''}</td>
-            <td class="px-3 py-3 font-bold text-slate-800">${item.poBatchNo || ''}</td>
-            <td class="px-3 py-3 font-semibold text-purple-700">${item.model || ''}</td>
-            <td class="px-3 py-3 text-slate-600">${item.type || ''}</td>
-            <td class="px-3 py-3 text-slate-600">${item.origin || ''} &rarr; ${item.destination || ''}</td>
-            <td class="px-3 py-3 text-slate-600">${item.truckType || ''}</td>
-            <td class="px-3 py-3 text-center font-bold text-slate-800">${item.qtyContainer || ''}</td>
-            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${item.category || ''}</span></td>
-            <td class="px-3 py-3 text-slate-600">${item.notes || "-"}</td>
+            <td class="px-3 py-3 text-slate-600 font-semibold">${esc(item.tanggal)}</td>
+            <td class="px-3 py-3 font-bold text-slate-800">${esc(item.poBatchNo)}</td>
+            <td class="px-3 py-3 font-semibold text-purple-700">${esc(item.model)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.type)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.origin)} &rarr; ${esc(item.destination)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.truckType)}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-800">${esc(item.qtyContainer)}</td>
+            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${esc(item.category)}</span></td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.notes || "-")}</td>
             <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadgeClass}">${currentStatus}</span></td>
             <td class="px-3 py-3 text-center space-x-1">${actionButtons}</td>
           </tr>`;
@@ -806,7 +956,8 @@ function populatePoDatalist() {
       });
 
       if (!filteredOps || filteredOps.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="14" class="text-center py-12 text-slate-400">No operational shipment data found for the selected dashboard date.</td></tr>`;
+        const msg = authBlocked ? "Please login to view data." : "No operational shipment data found for the selected dashboard date.";
+        tbody.innerHTML = `<tr><td colspan="14" class="text-center py-12 text-slate-400">${msg}</td></tr>`;
         return;
       }
 
@@ -833,10 +984,11 @@ function populatePoDatalist() {
           condStyle = getCondStyle(displayCond);
         }
 
+        const rid = esc(item.rowId);
         let actionButtons = '';
         if (userRole === "RECEIVING") {
           if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
-            actionButtons = `<button onclick="openUnloadingModal('${item.rowId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
+            actionButtons = `<button onclick="openUnloadingModal('${rid}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
           } else if (isReceived) {
             actionButtons = `<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
           } else {
@@ -845,13 +997,13 @@ function populatePoDatalist() {
         } else if (userRole === "GEELY" || userRole === "MERITAR") {
           if (item.status === 'SCHEDULED') {
             actionButtons = `
-              <button onclick="editData('${item.rowId}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-              <button onclick="openOutboundModal('${item.rowId}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center me-1 cursor-pointer"><i class="fa-solid fa-paper-plane"></i> Outbound</button>
+              <button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="openOutboundModal('${rid}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center me-1 cursor-pointer"><i class="fa-solid fa-paper-plane"></i> Outbound</button>
               <button disabled class="px-2 py-1 bg-slate-300 text-slate-500 text-[10px] font-bold rounded-lg inline-flex items-center cursor-not-allowed opacity-60"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
           } else if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
             actionButtons = `
-              <button onclick="editData('${item.rowId}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-              <button onclick="openUnloadingModal('${item.rowId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
+              <button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              <button onclick="openUnloadingModal('${rid}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center cursor-pointer shadow-sm"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
           } else {
             actionButtons = `<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
           }
@@ -859,29 +1011,30 @@ function populatePoDatalist() {
           actionButtons = `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
         }
 
-        let deleteBtn = (userRole === "GEELY") ? `<button onclick="deleteData('${item.rowId}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded-lg ms-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : '';
+        let deleteBtn = (userRole === "GEELY") ? `<button onclick="deleteData('${rid}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded-lg ms-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : '';
 
         html += `
           <tr class="hover:bg-slate-50 transition">
-            <td class="px-3 py-3 text-slate-600">${item.tanggal}</td>
-            <td class="px-3 py-3 font-semibold text-slate-800">${item.poBatchNo}</td>
-            <td class="px-3 py-3 font-semibold text-purple-700">${item.model}</td>
-            <td class="px-3 py-3 text-slate-600">${item.type}</td>
-            <td class="px-3 py-3 text-slate-600">${item.origin} &rarr; ${item.destination}</td>
-            <td class="px-3 py-3 text-slate-600">${item.truckType}</td>
-            <td class="px-3 py-3 text-center font-bold text-slate-700">${item.trip || "-"}</td>
-            <td class="px-3 py-3 text-center font-bold text-slate-800">${item.qtyContainer}</td>
-            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${item.category}</span></td>
-            <td class="px-3 py-3 text-slate-600">${item.notes || "-"}</td>
-            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadge}">${item.status}</span></td>
-            <td class="px-3 py-3 font-semibold text-slate-700">${displayQtyCase}</td>
-            <td class="px-3 py-3 ${condStyle}">${displayCond}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.tanggal)}</td>
+            <td class="px-3 py-3 font-semibold text-slate-800">${esc(item.poBatchNo)}</td>
+            <td class="px-3 py-3 font-semibold text-purple-700">${esc(item.model)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.type)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.origin)} &rarr; ${esc(item.destination)}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.truckType)}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-700">${esc(item.trip || "-")}</td>
+            <td class="px-3 py-3 text-center font-bold text-slate-800">${esc(item.qtyContainer)}</td>
+            <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${esc(item.category)}</span></td>
+            <td class="px-3 py-3 text-slate-600">${esc(item.notes || "-")}</td>
+            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadge}">${esc(item.status)}</span></td>
+            <td class="px-3 py-3 font-semibold text-slate-700">${esc(displayQtyCase)}</td>
+            <td class="px-3 py-3 ${condStyle}">${esc(displayCond)}</td>
             <td class="px-3 py-3 text-center space-x-1">${actionButtons} ${deleteBtn}</td>
           </tr>`;
       });
       tbody.innerHTML = html;
     }
 
+    // ===================== EXPORT =====================
     function getOpsExportDate() {
       const d = document.getElementById("exportOpsDate");
       return (d && d.value) ? d.value : document.getElementById("filterDashboardDate").value;
@@ -891,22 +1044,26 @@ function populatePoDatalist() {
       const date = getOpsExportDate();
       const category = document.getElementById("opsCategoryFilter").value;
       return allOperational.filter(s => {
-      const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
-      return itemDate === date && (category === "" || s.category === category);
+        const itemDate = s.tanggal ? s.tanggal.split('T')[0] : '';
+        return itemDate === date && (category === "" || s.category === category);
       });
     }
 
+    // Fetch the latest data from the server before export so the status is always current
     function withFreshData(callback) {
       const selectedDate = document.getElementById("filterDashboardDate").value;
       google.script.run
-      .withSuccessHandler(function(res) {
-      allPlanning = res.planning || [];
-      allOperational = res.operational || [];
-      callback();
-    })
-      .withFailureHandler(function() { callback(); })
-      .getTMSData(selectedDate);
-  }
+        .withSuccessHandler(function(res) {
+          if (res && res.authRequired) { handleAuthLost(true); return; }
+          allPlanning = res.planning || [];
+          allOperational = res.operational || [];
+          callback();
+        })
+        .withFailureHandler(function() {
+          showAlert("Failed to load the latest data. Please try again.", "error");
+        })
+        .getTMSData(selectedDate, sessionToken);
+    }
 
     function exportToExcel(type) { withFreshData(function() { exportToExcelNow(type); }); }
     function exportToPDF(type) { withFreshData(function() { exportToPDFNow(type); }); }
@@ -973,14 +1130,14 @@ function populatePoDatalist() {
       doc.text(generatedDateStr, 14, 21);
 
       const totalQtyPlan = (type === 'planning')
-      ? dataToExport.reduce((sum, i) => sum + (parseInt(i.qtyContainer) || 0), 0)
-      : 0;
+        ? dataToExport.reduce((sum, i) => sum + (parseInt(i.qtyContainer) || 0), 0)
+        : 0;
 
-    if (type === 'planning') {
-      doc.setFontSize(10);
-      doc.setTextColor(40, 40, 40);
-      doc.text("Total Plan: " + dataToExport.length + " Plans  |  Total Container: " + totalQtyPlan + " Container", 14, 27);
-    }
+      if (type === 'planning') {
+        doc.setFontSize(10);
+        doc.setTextColor(40, 40, 40);
+        doc.text("Total Plan: " + dataToExport.length + " Plans  |  Total Container: " + totalQtyPlan + " Container", 14, 27);
+      }
 
       let headers = type === 'planning' ? 
         [["Plan Date", "PO No", "Model", "Type", "Route", "Truck", "Qty", "Category", "Remarks", "Status"]] : 
@@ -997,18 +1154,19 @@ function populatePoDatalist() {
       });
 
       doc.autoTable({
-      head: headers,
-      body: rows,
-      foot: type === 'planning'
-     ? [[{ content: 'TOTAL', colSpan: 6, styles: { halign: 'right' } }, { content: totalQtyPlan + ' Container', colSpan: 4 }]]
-      : undefined,
-    startY: type === 'planning' ? 31 : 26,
-    styles: { fontSize: 8 }
-    });
+        head: headers,
+        body: rows,
+        foot: type === 'planning'
+          ? [[{ content: 'TOTAL', colSpan: 6, styles: { halign: 'right' } }, { content: totalQtyPlan + ' Container', colSpan: 4 }]]
+          : undefined,
+        startY: type === 'planning' ? 31 : 26,
+        styles: { fontSize: 8 }
+      });
       doc.save(type === 'planning' ? "Delivery_Planning.pdf" : "Operational_Report_" + getOpsExportDate() + ".pdf");
       showAlert("PDF report downloaded successfully!", "success");
     }
 
+    // ===================== FORM =====================
     function openModal(isSchedule) {
       if (userRole === "GUEST" || userRole === "RECEIVING") return showAlert("Access Denied!", "error");
       if (!isSchedule && userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can create Delivery Plan.", "error");
@@ -1110,6 +1268,27 @@ function populatePoDatalist() {
     function closeModal(id) {
       document.getElementById(id).classList.add("hidden");
       document.getElementById(id).classList.remove("flex");
+      setTimeout(refreshData, 300);
+    }
+
+    // Handles the result of write functions on the server
+    function onWriteDone(res, modalId, failMsg) {
+      if (res && res.authExpired) {
+        if (modalId) closeModal(modalId);
+        handleAuthLost(true);
+        return;
+      }
+      if (res && res.success) {
+        showAlert(res.message, 'success');
+        if (modalId) closeModal(modalId);
+        loadData();
+      } else {
+        showAlert((res && res.message) || failMsg, 'error');
+      }
+    }
+
+    function onWriteFailed() {
+      showAlert("Connection error. Please try again.", "error");
     }
 
     function saveData(e) {
@@ -1131,52 +1310,46 @@ function populatePoDatalist() {
         isSchedule: isSchedule
       };
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.success) {
-          showAlert(res.message, 'success');
-          closeModal("shipmentModal");
-          loadData();
-        } else {
-          showAlert("Failed to save data!", 'error');
-        }
-      }).saveShipment(form);
+      google.script.run
+        .withSuccessHandler(function(res) { onWriteDone(res, "shipmentModal", "Failed to save data!"); })
+        .withFailureHandler(onWriteFailed)
+        .saveShipment(form, sessionToken);
     }
 
     function submitOutbound(e) {
       e.preventDefault();
-      const form = { rowId: document.getElementById("outboundRowId").value };
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.success) {
-          showAlert(res.message, 'success');
-          closeModal("outboundModal");
-          loadData();
-        } else {
-          showAlert("Failed!", 'error');
-        }
-      }).processOutbound(form);
+      const form = {
+        rowId: document.getElementById("outboundRowId").value,
+        poBatchNo: document.getElementById("outboundPoBatchNo").value
+      };
+      google.script.run
+        .withSuccessHandler(function(res) { onWriteDone(res, "outboundModal", "Failed!"); })
+        .withFailureHandler(onWriteFailed)
+        .processOutbound(form, sessionToken);
     }
 
     function submitUnloading(e) {
       e.preventDefault();
       const form = {
         rowId: document.getElementById("unloadRowId").value,
+        poBatchNo: document.getElementById("unloadPoBatchNo").value,
         unloadQty: document.getElementById("unloadQty").value,
         materialCond: document.getElementById("materialCond").value
       };
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.success) {
-          showAlert(res.message, 'success');
-          closeModal("unloadingModal");
-          loadData();
-        } else {
-          showAlert("Failed!", 'error');
-        }
-      }).processUnloading(form);
+      google.script.run
+        .withSuccessHandler(function(res) { onWriteDone(res, "unloadingModal", "Failed!"); })
+        .withFailureHandler(onWriteFailed)
+        .processUnloading(form, sessionToken);
     }
 
     function deleteData(rowId) {
       if (userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can delete data.", "error");
+      const item = rowId.startsWith("O_")
+        ? allOperational.find(s => s.rowId == rowId)
+        : allPlanning.find(s => s.rowId == rowId);
+      if (!item) return;
       selectedRowToDelete = rowId;
+      selectedPoToDelete = item.poBatchNo;
       const modal = document.getElementById("customConfirmModal");
       modal.classList.remove("hidden"); modal.classList.add("flex");
       document.getElementById("btnConfirmDelete").onclick = function() { executeDelete(); };
@@ -1184,21 +1357,20 @@ function populatePoDatalist() {
 
     function closeConfirmModal() {
       selectedRowToDelete = null;
+      selectedPoToDelete = "";
       document.getElementById("customConfirmModal").classList.add("hidden");
       document.getElementById("customConfirmModal").classList.remove("flex");
     }
 
     function executeDelete() {
       if (!selectedRowToDelete) return;
-      google.script.run.withSuccessHandler(function(res) {
-        closeConfirmModal();
-        if (res.success) {
-          showAlert(res.message, 'success');
-          loadData();
-        } else {
-          showAlert("Failed to delete record!", 'error');
-        }
-      }).deleteShipment(selectedRowToDelete);
+      const rowId = selectedRowToDelete;
+      const po = selectedPoToDelete;
+      closeConfirmModal();
+      google.script.run
+        .withSuccessHandler(function(res) { onWriteDone(res, null, "Failed to delete record!"); })
+        .withFailureHandler(onWriteFailed)
+        .deleteShipment(rowId, sessionToken, po);
     }
 
     function showAlert(message, type = 'success') {
@@ -1222,6 +1394,7 @@ function populatePoDatalist() {
     function closeCustomAlert() {
       document.getElementById('customAlert').classList.add('hidden');
       document.getElementById('customAlert').classList.remove('flex');
+      setTimeout(refreshData, 300);
     }
   </script>
 </body>
