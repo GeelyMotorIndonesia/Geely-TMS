@@ -828,7 +828,19 @@
       document.getElementById("statTotalOps").innerText = stats.total || 0;
       document.getElementById("statUnloaded").innerText = stats.unloaded || 0;
       document.getElementById("statWip").innerText = currentWipCount;
-      document.getElementById("statVariance").innerText = stats.variance || 0;
+      // Variance color: green when unloaded is above plan (+), red when below plan (-), grey when equal.
+      // Shown as +N when above plan and -N when below plan.
+      (function() {
+        const el = document.getElementById("statVariance");
+        const signed = Number(stats.varianceSigned);
+        const absVal = stats.variance || 0;
+        const dir = isNaN(signed) ? 0 : Math.sign(signed);
+        const sign = dir > 0 ? "+" : (dir < 0 ? "-" : "");
+        el.innerText = sign + absVal;
+        el.classList.remove("text-rose-600", "text-emerald-600", "text-slate-400");
+        el.classList.add(dir > 0 ? "text-emerald-600" : (dir < 0 ? "text-rose-600" : "text-slate-400"));
+        el.title = dir > 0 ? "Above plan" : (dir < 0 ? "Below plan" : "Equal to plan");
+      })();
       
       if (stats.targetDate) {
         document.getElementById("lblDateOps").innerText = "Date: " + stats.targetDate;
