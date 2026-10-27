@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <title>GTMS & Material Receiving System</title>
 
@@ -26,6 +26,30 @@
     header h1.brand { display: flex; align-items: center; gap: 12px; }
     header .user-info { font-size: 13px; opacity: 0.9; }
     .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  </style>
+  <style>
+    /* Mobile: use the full screen width and never scroll the page sideways */
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+    body { min-height: 100vh; min-height: 100dvh; }
+    @media (max-width: 767px) {
+      main, header > div { max-width: 100% !important; width: 100%; }
+      main { padding-left: 10px !important; padding-right: 10px !important; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+      header > div { padding-left: max(10px, env(safe-area-inset-left)) !important; padding-right: max(10px, env(safe-area-inset-right)) !important; }
+      .header-right, .header-right > * { min-width: 0; max-width: 100%; width: 100%; }
+      /* three tabs share the row equally, icon on top of the label */
+      #tabBtnPlanning, #tabBtnOperational, #tabBtnWindow {
+        flex: 1 1 0 !important; min-width: 0 !important; flex-direction: column !important;
+        padding: 6px 2px !important; font-size: 10px !important; gap: 2px !important; white-space: normal; word-break: break-word;
+      }
+      #tabBtnPlanning .rounded-full, #tabBtnOperational .rounded-full, #tabBtnWindow .rounded-full { padding: 1px 6px; }
+      .overflow-x-auto { max-width: 100%; -webkit-overflow-scrolling: touch; }
+      .grid > * { min-width: 0; }
+      .fixed.inset-0 { overflow-y: auto; }
+      [class*="rounded-2xl"], [class*="rounded-xl"] { max-width: 100%; }
+    }
+    @media (max-width: 480px) {
+      #fleetGrid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen select-none">
@@ -51,18 +75,18 @@
       </div>
 
       <div class="flex flex-wrap items-center justify-between md:justify-end gap-2 w-full md:w-auto header-right">
-        <div class="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 space-x-1 w-full sm:w-auto justify-stretch">
-          <button id="tabBtnPlanning" onclick="switchTab('planning')" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-purple-600 text-white shadow-md cursor-pointer">
+        <div class="flex items-stretch bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 gap-1 w-full min-w-0 sm:w-auto justify-stretch">
+          <button id="tabBtnPlanning" onclick="switchTab('planning')" class="flex-1 min-w-0 sm:flex-none px-1.5 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 leading-tight text-center bg-purple-600 text-white shadow-md cursor-pointer">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Delivery Planning</span>
             <span id="badgePlanCount" class="bg-purple-900/60 text-purple-200 px-1.5 py-0.5 rounded-full text-[9px]">0</span>
           </button>
-          <button id="tabBtnOperational" onclick="switchTab('operational')" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white cursor-pointer">
+          <button id="tabBtnOperational" onclick="switchTab('operational')" class="flex-1 min-w-0 sm:flex-none px-1.5 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 leading-tight text-center text-slate-400 hover:text-white cursor-pointer">
             <i class="fa-solid fa-truck-fast"></i>
             <span>Operational TMS</span>
             <span id="badgeOpsCount" class="bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-full text-[9px]">0</span>
           </button>
-          <button id="tabBtnWindow" onclick="switchTab('window')" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white cursor-pointer">
+          <button id="tabBtnWindow" onclick="switchTab('window')" class="flex-1 min-w-0 sm:flex-none px-1.5 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 leading-tight text-center text-slate-400 hover:text-white cursor-pointer">
             <i class="fa-solid fa-stopwatch"></i>
             <span>Window Time</span>
             <span id="badgeWindowCount" class="bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-full text-[9px]">0</span>
@@ -400,7 +424,21 @@
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
           <input type="text" id="searchWindow" oninput="renderWindow()" placeholder="Search PO No, Trip, Truck Plate, Model..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500 outline-none">
         </div>
-        <div id="windowChips" class="flex flex-wrap gap-2"></div>
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
+          <select id="windowStatusFilter" onchange="setWindowFilter(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 w-full sm:w-auto cursor-pointer"></select>
+          <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Leave empty to follow the Outbound Date above (both empty = all trips)">
+            <i class="fa-solid fa-file-export text-cyan-600 text-xs"></i>
+            <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">Export Date:</span>
+            <input type="date" id="exportWindowDate" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <button type="button" onclick="document.getElementById('exportWindowDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Follow Outbound Date"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <button onclick="exportWindow('excel')" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
+          </button>
+          <button onclick="exportWindow('pdf')" class="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-pdf"></i> <span>Export PDF</span>
+          </button>
+        </div>
       </div>
 
       <!-- Window Table -->
@@ -972,7 +1010,7 @@
     }
 
     function switchTab(tab) {
-      const base = "flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ";
+      const base = "flex-1 min-w-0 sm:flex-none px-1.5 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 leading-tight text-center cursor-pointer ";
       const off = base + "text-slate-400 hover:text-white";
       const tabs = {
         planning:    { btn: "tabBtnPlanning",    page: "pagePlanning",    on: base + "bg-purple-600 text-white shadow-md" },
@@ -1263,12 +1301,16 @@
         { k: "LATE", label: "Late", n: cLate },
         { k: "RETURNING", label: "Returning to Warehouse", n: cReturning }
       ];
-      document.getElementById("windowChips").innerHTML = chips.map(function(c) {
-        const on = windowFilter === c.k;
-        return '<button type="button" onclick="setWindowFilter(\'' + c.k + '\')" class="px-3 py-1.5 rounded-full text-[11px] font-bold border cursor-pointer transition ' +
-          (on ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50') + '">' +
-          c.label + ' <span class="' + (on ? 'text-cyan-100' : 'text-slate-400') + '">' + c.n + '</span></button>';
-      }).join('');
+      // Status dropdown (options are built once; only the counts are refreshed, so an open list is not closed by the ticker)
+      const selF = document.getElementById("windowStatusFilter");
+      if (selF.options.length !== chips.length) {
+        selF.innerHTML = chips.map(function(c) { return '<option value="' + c.k + '"></option>'; }).join('');
+      }
+      chips.forEach(function(c, idx) {
+        const t = c.label + ' (' + c.n + ')';
+        if (selF.options[idx].text !== t) selF.options[idx].text = t;
+      });
+      if (selF.value !== windowFilter) selF.value = windowFilter;
 
       // Apply chip + search filters
       let rows = all.filter(function(r) {
@@ -2122,6 +2164,110 @@
         styles: { fontSize: 8 }
       });
       doc.save(type === 'planning' ? "Delivery_Planning.pdf" : "Operational_Report_" + getOpsExportDate() + ".pdf");
+      showAlert("PDF report downloaded successfully!", "success");
+    }
+
+    // ===================== WINDOW TIME EXPORT =====================
+    function getWindowExportDate() {
+      const e = document.getElementById("exportWindowDate");
+      if (e && e.value) return e.value;
+      const f = document.getElementById("filterWindowDate");
+      return f ? f.value : "";
+    }
+
+    function fmtFullDateTime(ms) {
+      if (!ms) return "-";
+      const d = new Date(ms);
+      return localDateOf(ms) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+    }
+
+    // Trips that left Meritar on the export date, filtered by the status dropdown, ordered by PO then Trip
+    function getWindowExportRows() {
+      const now = windowNow();
+      const date = getWindowExportDate();
+      const out = [];
+      (allOperational || []).forEach(function(it) {
+        const st = getWindowState(it, now);
+        if (!st) return;
+        if (date && localDateOf(it.outboundMs) !== date) return;
+        const rs = getReturnState(it, now);
+        const k = st.key;
+        if (windowFilter === 'TRANSIT' && !(k === 'TRANSIT' || k === 'DUESOON')) return;
+        if (windowFilter === 'OVERDUE' && k !== 'OVERDUE') return;
+        if (windowFilter === 'ONTIME' && k !== 'ONTIME') return;
+        if (windowFilter === 'LATE' && k !== 'LATE') return;
+        if (windowFilter === 'RETURNING' && !(rs && rs.key === 'RETURNING')) return;
+        let label, time;
+        const elapsed = Math.max(0, now - it.outboundMs);
+        if (k === 'TRANSIT') { label = 'IN TRANSIT'; time = fmtDuration(elapsed) + ' / ' + fmtDuration(transitMinutes * 60000); }
+        else if (k === 'DUESOON') { label = 'DUE SOON'; time = fmtDuration(elapsed) + ' / ' + fmtDuration(transitMinutes * 60000); }
+        else if (k === 'OVERDUE') { label = 'OVERDUE'; time = fmtDuration(elapsed) + ' (+' + fmtDuration(st.over) + ' over)'; }
+        else if (k === 'ONTIME') { label = 'ON TIME'; const e = Math.floor(-st.diff / 60000); time = e >= 1 ? e + ' min early' : 'on time'; }
+        else if (k === 'LATE') { label = 'LATE'; time = '+' + Math.ceil(st.diff / 60000) + ' min late'; }
+        else { label = 'NO ARRIVAL RECORD'; time = '-'; }
+        out.push({
+          key: k, po: it.poBatchNo || '-', model: it.model || '-', type: it.type || '-', trip: it.trip || '-',
+          truck: it.truckPlate || '-', qty: it.qtyContainer, outbound: fmtFullDateTime(it.outboundMs),
+          target: fmtFullDateTime(st.eta), arrived: fmtFullDateTime(it.arrivalMs), status: label, time: time,
+          received: fmtFullDateTime(it.unloadMs), back: rs ? fmtFullDateTime(rs.back) : '-', next: rs ? fmtFullDateTime(rs.next) : '-',
+          _ob: it.outboundMs
+        });
+      });
+      out.sort(function(a, b) {
+        const po = String(a.po).localeCompare(String(b.po), undefined, { numeric: true });
+        if (po !== 0) return po;
+        const ta = parseInt(a.trip, 10), tb = parseInt(b.trip, 10);
+        if (!isNaN(ta) && !isNaN(tb) && ta !== tb) return ta - tb;
+        return a._ob - b._ob;
+      });
+      return out;
+    }
+
+    function exportWindow(kind) { withFreshData(function() { kind === 'excel' ? exportWindowExcelNow() : exportWindowPDFNow(); }); }
+
+    function exportWindowExcelNow() {
+      const rows = getWindowExportRows();
+      if (rows.length === 0) return showAlert("No data available to export!", "error");
+      const data = rows.map(function(r) {
+        return {
+          "PO No": r.po, "Model": r.model, "Type": r.type, "Trip": r.trip, "Truck": r.truck, "Container Qty": r.qty,
+          "Outbound": r.outbound, "Target Arrival": r.target, "Arrived at Factory": r.arrived, "Window Status": r.status, "Time": r.time,
+          "Received at Factory": r.received, "Back at Warehouse By": r.back, "Next Trip at Factory By": r.next
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Window Time");
+      XLSX.writeFile(wb, "TMS_Window_Time_Report_" + (getWindowExportDate() || "All") + ".xlsx");
+      showAlert("Excel report downloaded successfully!", "success");
+    }
+
+    function exportWindowPDFNow() {
+      const rows = getWindowExportRows();
+      if (rows.length === 0) return showAlert("No data available to export!", "error");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(16);
+      doc.text("Window Time Report - " + (getWindowExportDate() || "All Dates"), 14, 15);
+      const now = new Date();
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Generated Date: " + fmtFullDateTime(now.getTime()), 14, 21);
+      const onTime = rows.filter(r => r.key === 'ONTIME').length;
+      const late = rows.filter(r => r.key === 'LATE').length;
+      const rate = (onTime + late) > 0 ? Math.round(onTime * 100 / (onTime + late)) + "%" : "-";
+      const totalQty = rows.reduce((s, r) => s + (parseInt(r.qty, 10) || 0), 0);
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Total Trips: " + rows.length + "  |  Total Container: " + totalQty + "  |  On Time: " + onTime + "  |  Late: " + late + "  |  On-Time Rate: " + rate, 14, 27);
+      doc.autoTable({
+        head: [["PO No", "Model", "Type", "Trip", "Truck", "Qty", "Outbound", "Target Arrival", "Arrived", "Status", "Time", "Received", "Back at WH By", "Next at Factory By"]],
+        body: rows.map(r => [r.po, r.model, r.type, r.trip, r.truck, r.qty, r.outbound, r.target, r.arrived, r.status, r.time, r.received, r.back, r.next]),
+        startY: 31,
+        styles: { fontSize: 6.5, cellPadding: 1.5 },
+        headStyles: { fontSize: 6.5 }
+      });
+      doc.save("Window_Time_Report_" + (getWindowExportDate() || "All") + ".pdf");
       showAlert("PDF report downloaded successfully!", "success");
     }
 
