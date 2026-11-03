@@ -252,32 +252,30 @@
         <div class="overflow-x-auto"><div id="opsChartBox"></div></div>
       </div>
 
-      <div class="bg-white p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3">
+      <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row gap-3 md:items-center justify-between">
         <div class="relative w-full md:w-96">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
           <input type="text" id="searchOps" onkeyup="filterOpsTable()" placeholder="Search PO No, Trip, Status, Model, Category..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
-        <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
-          <select id="opsCategoryFilter" onchange="filterOpsTable()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2">
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
+          <select id="opsCategoryFilter" onchange="filterOpsTable()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 w-full sm:w-auto cursor-pointer">
             <option value="">All Categories</option>
             <option value="KD">KD</option>
             <option value="PBP">PBP</option>
             <option value="NON IKD">NON IKD</option>
           </select>
-          <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Leave empty to follow the Dashboard Date">
-              <i class="fa-solid fa-file-export text-indigo-600 text-xs"></i>
-              <span class="text-[11px] font-bold text-slate-600">Export Date:</span>
-              <input type="date" id="exportOpsDate" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
-              <button type="button" onclick="document.getElementById('exportOpsDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Follow Dashboard Date"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <button onclick="exportToExcel('operational')" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
-              <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
-            </button>
-            <button onclick="exportToPDF('operational')" class="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
-              <i class="fa-solid fa-file-pdf"></i> <span>Export PDF</span>
-            </button>
+          <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl w-full sm:w-auto" title="Leave empty to follow the Dashboard Date">
+            <i class="fa-solid fa-file-export text-indigo-600 text-xs"></i>
+            <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">Export Date:</span>
+            <input type="date" id="exportOpsDate" class="flex-1 min-w-0 sm:flex-none bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <button type="button" onclick="document.getElementById('exportOpsDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Follow Dashboard Date"><i class="fa-solid fa-xmark"></i></button>
           </div>
+          <button onclick="exportToExcel('operational')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
+          </button>
+          <button onclick="exportToPDF('operational')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-pdf"></i> <span>Export PDF</span>
+          </button>
         </div>
       </div>
 
@@ -426,16 +424,16 @@
         </div>
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
           <select id="windowStatusFilter" onchange="setWindowFilter(this.value)" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 w-full sm:w-auto cursor-pointer"></select>
-          <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl" title="Leave empty to follow the Outbound Date above (both empty = all trips)">
+          <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl w-full sm:w-auto" title="Leave empty to follow the Outbound Date above (both empty = all trips)">
             <i class="fa-solid fa-file-export text-cyan-600 text-xs"></i>
             <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap">Export Date:</span>
-            <input type="date" id="exportWindowDate" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
+            <input type="date" id="exportWindowDate" class="flex-1 min-w-0 sm:flex-none bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer">
             <button type="button" onclick="document.getElementById('exportWindowDate').value=''" class="text-xs text-slate-400 hover:text-rose-600" title="Follow Outbound Date"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <button onclick="exportWindow('excel')" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+          <button onclick="exportWindow('excel')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
             <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
           </button>
-          <button onclick="exportWindow('pdf')" class="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
+          <button onclick="exportWindow('pdf')" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer">
             <i class="fa-solid fa-file-pdf"></i> <span>Export PDF</span>
           </button>
         </div>
@@ -713,10 +711,11 @@
     // Fill this ONLY if this page is opened outside Apps Script (e.g. GitHub Pages).
     // Contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
     // Leave empty ("") if the page is opened through the Apps Script link itself.
-    const API_URL = "https://script.google.com/macros/s/AKfycbyvG99Jl8JVazri6VkKqzSXJVMRXqCVrVbn_6tJxF8JRayuNG9qWF-ns0ZIl2bp5jQB/exec";
+    const API_URL = "";
 
     // Replacement for google.script.run when the page is opened outside Apps Script
     if (typeof google === "undefined" || !google.script) {
+      window.__shim = true;
       const makeRunner = (success, failure) => new Proxy({}, {
         get(_, prop) {
           if (prop === "withSuccessHandler") return fn => makeRunner(fn, failure);
@@ -947,7 +946,9 @@
         })
         .withFailureHandler(function() {
           reset();
-          showAlert("Login failed. Please check your connection and try again.", "error");
+          showAlert(API_URL === "" && window.__shim === true
+            ? "API_URL is empty in Index.html. Paste your Apps Script Web App URL (ending in /exec) into API_URL, then upload the file again."
+            : "Login failed. Please check your connection and try again.", "error");
         })
         .login(inputPin);
     }
