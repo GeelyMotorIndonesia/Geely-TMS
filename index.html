@@ -686,9 +686,10 @@
           <div class="bg-slate-50 rounded-xl py-2"><div class="text-[10px] text-slate-400 font-semibold uppercase">Ready to depart</div><div id="busyReady" class="text-lg font-black text-emerald-600 tabular-nums"></div></div>
         </div>
       </div>
-      <p class="px-6 pt-4 text-center text-xs text-slate-500">This truck cannot be sent again until its previous trip is finished and it is ready to depart. Please choose another truck.</p>
-      <div class="p-5">
-        <button type="button" onclick="closeTruckBusy(false)" class="w-full py-3 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 text-white text-xs font-bold shadow-md hover:opacity-90 cursor-pointer"><i class="fa-solid fa-arrow-left mr-1"></i> Choose Another Truck</button>
+      <p id="busyNote" class="px-6 pt-4 text-center text-xs text-slate-500"></p>
+      <div id="busyButtons" class="p-5 grid grid-cols-1 gap-3">
+        <button type="button" onclick="closeTruckBusy(false)" class="py-3 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 text-white text-xs font-bold shadow-md hover:opacity-90 cursor-pointer"><i class="fa-solid fa-arrow-left mr-1"></i> Choose Another Truck</button>
+        <button type="button" id="busySendAnyway" onclick="closeTruckBusy(true)" class="hidden py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-md hover:opacity-90 cursor-pointer"><i class="fa-solid fa-paper-plane mr-1"></i> Send Anyway</button>
       </div>
     </div>
   </div>
@@ -2446,13 +2447,13 @@
         rowId: document.getElementById("outboundRowId").value,
         poBatchNo: document.getElementById("outboundPoBatchNo").value,
         truckPlate: document.getElementById("outboundTruckPlate").value,
-        force: false
+        force: force === true
       };
       google.script.run
         .withSuccessHandler(function(res) {
           // The truck is still busy with a previous trip: ask before sending it again
-          if (res && res.busy) {
-            askTruckBusy(res.busyInfo, res.message);
+          if (res && res.busy && !form.force) {
+            askTruckBusy(res.busyInfo, res.message, res.canForce === true).then(function(ok) { if (ok) submitOutbound(null, true); });
             return;
           }
           onWriteDone(res, "outboundModal", "Failed!");
@@ -2508,7 +2509,7 @@
 
     // Styled "truck still busy" dialog (replaces the browser confirm box)
     let truckBusyResolve = null;
-    function askTruckBusy(info, fallbackMsg) {
+    function askTruckBusy(info, fallbackMsg, canForce) {
       return new Promise(function(resolve) {
         info = info || {};
         const states = {
@@ -2523,8 +2524,14 @@
         const badge = document.getElementById('busyBadge');
         badge.innerText = st[0]; badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold ' + st[1];
         document.getElementById('busyAtLabel').innerText = st[2];
-        document.getElementById('busyAt').innerText = info.at || '-';
+        document.getElementById('busyAt').innerText = info.at || (info.state === 'AT_FACTORY' ? 'Waiting Receive' : '-');
         document.getElementById('busyReady').innerText = info.readyAt || (info.state === 'AT_FACTORY' || info.state === 'TO_FACTORY' ? 'After trip' : '-');
+        const sendBtn = document.getElementById('busySendAnyway');
+        sendBtn.classList.toggle('hidden', !canForce);
+        document.getElementById('busyButtons').className = 'p-5 grid gap-3 ' + (canForce ? 'grid-cols-2' : 'grid-cols-1');
+        document.getElementById('busyNote').innerText = canForce
+          ? 'This truck has already been received and is on its way back or loading. You can wait until it is ready to depart, choose another truck, or send it now.'
+          : 'This truck cannot be sent again until its previous trip is finished and it is ready to depart. Please choose another truck.';
         truckBusyResolve = resolve;
         const m = document.getElementById('truckBusyModal');
         m.classList.remove('hidden'); m.classList.add('flex');
