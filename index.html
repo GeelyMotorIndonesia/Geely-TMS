@@ -553,6 +553,19 @@
             <label class="block text-xs font-semibold text-slate-600 mb-1">Special Notes / Remarks (Optional)</label>
             <input type="text" id="notes" maxlength="200" placeholder="Remarks" class="w-full px-3 py-2 border rounded-xl text-xs outline-none">
           </div>
+          <div id="receivedEditBox" class="hidden sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div class="sm:col-span-2 text-[11px] font-bold text-emerald-700"><i class="fa-solid fa-circle-check"></i> Received data (this trip is already unloaded)</div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Qty Case (Received)</label>
+              <input type="number" id="editUnloadQty" min="1" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Case Condition</label>
+              <select id="editMaterialCond" class="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none">
+                <option value="GOOD">GOOD</option><option value="DAMAGE">DAMAGE</option><option value="DENT & SCRATCH">DENT & SCRATCH</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="pt-3 flex justify-end gap-2.5 border-t">
           <button type="button" onclick="closeModal('shipmentModal')" class="px-4 py-2 bg-slate-100 text-xs font-semibold rounded-xl cursor-pointer">Cancel</button>
@@ -1540,8 +1553,10 @@
             if (v <= 0) return;
             const y1 = yOf(acc + v), y0 = yOf(acc);
             g += '<rect x="' + (xC(i) - bw / 2) + '" y="' + y1 + '" width="' + bw + '" height="' + Math.max(0, y0 - y1) + '" fill="' + s.color + '"><title>Day ' + esc(label) + ' - ' + esc(s.name) + ': ' + v + '</title></rect>';
+            if (y0 - y1 >= 11) g += '<text x="' + xC(i) + '" y="' + ((y0 + y1) / 2 + 3) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" pointer-events="none">' + v + '</text>';
             acc += v;
           });
+          if (acc > 0) g += '<text x="' + xC(i) + '" y="' + (yOf(acc) - 3) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#334155" pointer-events="none">' + acc + '</text>';
         } else {
           const k = bars.length;
           const bw = Math.max(3, Math.min(12, (gw - 6) / k));
@@ -1550,7 +1565,8 @@
             if (v <= 0) return;
             const x = xC(i) - (k * bw) / 2 + si * bw;
             const y = yOf(v);
-            g += '<rect x="' + x + '" y="' + y + '" width="' + (bw - 1) + '" height="' + Math.max(0, yOf(0) - y) + '" fill="' + s.color + '"><title>Day ' + esc(label) + ' - ' + esc(s.name) + ': ' + v + '</title></rect>';
+            g += '<rect x="' + x + '" y="' + y + '" width="' + (bw - 1) + '" height="' + Math.max(0, yOf(0) - y) + '" fill="' + s.color + '"><title>Day ' + esc(label) + ' - ' + esc(s.name) + ': ' + v + '</title></rect>' +
+                 '<text x="' + (x + (bw - 1) / 2) + '" y="' + (y - 3) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#334155" pointer-events="none">' + v + '</text>';
           });
         }
       }
@@ -1576,7 +1592,8 @@
         for (let i = 0; i < n; i++) {
           const v = s.values[i];
           if (v == null) continue;
-          g += '<circle cx="' + xC(i) + '" cy="' + yOf(v) + '" r="3" fill="' + s.color + '"><title>Day ' + esc(o.labels[i]) + ' - ' + esc(s.name) + ': ' + v + '</title></circle>';
+          g += '<circle cx="' + xC(i) + '" cy="' + yOf(v) + '" r="3" fill="' + s.color + '"><title>Day ' + esc(o.labels[i]) + ' - ' + esc(s.name) + ': ' + v + '</title></circle>' +
+            '<text x="' + xC(i) + '" y="' + (yOf(v) - 7) + '" text-anchor="middle" font-size="8" font-weight="700" fill="#334155" pointer-events="none">' + v + '</text>';
         }
       });
 
@@ -1589,6 +1606,7 @@
         '<p class="text-lg font-black ' + (colorCls || 'text-slate-800') + '">' + esc(value) + '</p></div>';
     }
 
+    // Variance: negative = still short of plan (red, e.g. plan 40 unloaded 25 = -15), positive = above plan (green), zero = black
     function signedColor(v) { return v > 0 ? 'text-emerald-600' : (v < 0 ? 'text-rose-600' : 'text-slate-900'); }
 
     function renderCharts() {
@@ -1619,7 +1637,7 @@
         if (d.slice(0, 7) === ym && t.status === 'RECEIVED / UNLOADED') unl[parseInt(d.slice(8, 10), 10) - 1] += 1;
       });
       const totalPlan = plan.reduce((a, b) => a + b, 0), totalUnl = unl.reduce((a, b) => a + b, 0);
-      const diff = totalPlan > 0 ? totalUnl - totalPlan : 0;
+      const diff = totalUnl - totalPlan;
       document.getElementById("opsChartSummary").innerHTML =
         summaryCell("Total Plan", totalPlan) +
         summaryCell("Total Unloaded", totalUnl, "text-emerald-600") +
@@ -1803,8 +1821,7 @@
       document.getElementById("statTotalOps").innerText = stats.total || 0;
       document.getElementById("statUnloaded").innerText = stats.unloaded || 0;
       document.getElementById("statWip").innerText = currentWipCount;
-      // Variance color: green when unloaded is above plan (+), red when below plan (-), black when equal.
-      // Shown as +N when above plan and -N when below plan.
+      // Variance: -N (red) = still short of plan, +N (green) = above plan, 0 = black.
       (function() {
         const el = document.getElementById("statVariance");
         const signed = Number(stats.varianceSigned);
@@ -1814,7 +1831,7 @@
         el.innerText = sign + absVal;
         el.classList.remove("text-rose-600", "text-emerald-600", "text-slate-400", "text-slate-900");
         el.classList.add(dir > 0 ? "text-emerald-600" : (dir < 0 ? "text-rose-600" : "text-slate-900"));
-        el.title = dir > 0 ? "Above plan" : (dir < 0 ? "Below plan" : "Equal to plan");
+        el.title = dir < 0 ? "Still to unload" : (dir > 0 ? "Above plan" : "Equal to plan");
       })();
       
       if (stats.targetDate) {
@@ -1990,17 +2007,20 @@
             actionButtons = `<span class="text-slate-400 italic text-[11px]">Waiting Outbound</span>`;
           }
         } else if (userRole === "GEELY" || userRole === "MERITAR") {
+          // Edit is only for Admin Geely (all statuses, including already received trips)
+          const editBtn = (userRole === "GEELY")
+            ? `<button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>` : '';
           if (item.status === 'SCHEDULED') {
             actionButtons = `
-              <button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              ${editBtn}
               <button onclick="openOutboundModal('${rid}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-lg transition inline-flex items-center me-1 cursor-pointer"><i class="fa-solid fa-paper-plane"></i> Outbound</button>
               <button disabled class="px-2 py-1 bg-slate-300 text-slate-500 text-[10px] font-bold rounded-lg inline-flex items-center cursor-not-allowed opacity-60"><i class="fa-solid fa-truck-loading"></i> Receive</button>`;
           } else if (item.status === 'IN TRANSIT / OUTBOUND' || item.status === 'ON THE WAY / WIP UNLOAD' || item.status === 'ON THE WAY / WIP UNLOADED') {
             actionButtons = `
-              <button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+              ${editBtn}
               ${unloadButton(item, rid)}`;
           } else {
-            actionButtons = `<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
+            actionButtons = `${editBtn}<span class="text-[10px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Unloaded</span>`;
           }
         } else {
           actionButtons = `<span class="text-slate-400 italic text-[11px]">Read-Only</span>`;
@@ -2280,6 +2300,7 @@
 
       document.getElementById("tmsForm").reset();
       document.getElementById("rowId").value = "";
+      document.getElementById("receivedEditBox").classList.add("hidden");
       document.getElementById("isScheduleFlag").value = isSchedule ? "true" : "false";
       
       const badge = document.getElementById("autoFillBadge");
@@ -2319,9 +2340,19 @@
       }
       
       if (!item) return;
+      if (isOpsItem && userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can edit Operational TMS data.", "error");
 
       const badge = document.getElementById("autoFillBadge");
       if (badge) badge.classList.add("hidden");
+
+      const recBox = document.getElementById("receivedEditBox");
+      if (isOpsItem && item.status === 'RECEIVED / UNLOADED') {
+        recBox.classList.remove("hidden");
+        document.getElementById("editUnloadQty").value = item.unloadQty || "";
+        document.getElementById("editMaterialCond").value = normalizeCond(item.materialCond) || "GOOD";
+      } else {
+        recBox.classList.add("hidden");
+      }
 
       document.getElementById("rowId").value = item.rowId;
       document.getElementById("isScheduleFlag").value = isOpsItem ? "true" : "false";
@@ -2434,6 +2465,10 @@
         notes: document.getElementById("notes").value,
         isSchedule: isSchedule
       };
+      if (!document.getElementById("receivedEditBox").classList.contains("hidden")) {
+        form.unloadQty = document.getElementById("editUnloadQty").value;
+        form.materialCond = document.getElementById("editMaterialCond").value;
+      }
 
       google.script.run
         .withSuccessHandler(function(res) { onWriteDone(res, "shipmentModal", "Failed to save data!"); })
