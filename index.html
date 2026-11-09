@@ -2007,8 +2007,8 @@
             actionButtons = `<span class="text-slate-400 italic text-[11px]">Waiting Outbound</span>`;
           }
         } else if (userRole === "GEELY" || userRole === "MERITAR") {
-          // Edit is only for Admin Geely (all statuses, including already received trips)
-          const editBtn = (userRole === "GEELY")
+          // Edit: Geely and Meritar for trips not received yet; only Geely for received trips
+          const editBtn = (userRole === "GEELY" || !isReceived)
             ? `<button onclick="editData('${rid}')" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer me-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>` : '';
           if (item.status === 'SCHEDULED') {
             actionButtons = `
@@ -2340,7 +2340,7 @@
       }
       
       if (!item) return;
-      if (isOpsItem && userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can edit Operational TMS data.", "error");
+      if (isOpsItem && userRole !== "GEELY" && item.status === 'RECEIVED / UNLOADED') return showAlert("Access Denied! Only Admin Geely can edit a trip that has already been received.", "error");
 
       const badge = document.getElementById("autoFillBadge");
       if (badge) badge.classList.add("hidden");
