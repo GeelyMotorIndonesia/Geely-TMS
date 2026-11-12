@@ -8,7 +8,7 @@
   <title>GTMS & Material Receiving System</title>
 
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icon-192.png">
+  <meta name="theme-color" content="#14213D">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <meta name="mobile-web-app-capable" content="yes">
@@ -729,7 +729,7 @@
     // Fill this ONLY if this page is opened outside Apps Script (e.g. GitHub Pages).
     // Contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
     // Leave empty ("") if the page is opened through the Apps Script link itself.
-    const API_URL = "https://script.google.com/macros/s/AKfycbyvG99Jl8JVazri6VkKqzSXJVMRXqCVrVbn_6tJxF8JRayuNG9qWF-ns0ZIl2bp5jQB/exec";
+    const API_URL = "";
 
     // Replacement for google.script.run when the page is opened outside Apps Script
     if (typeof google === "undefined" || !google.script) {
@@ -881,7 +881,7 @@
       allOperational = res.operational || [];
       updateBadgesAndKPI(res.stats || { total: 0, unloaded: 0, wip: 0, variance: 0, targetDate: selectedDate });
       filterPlanningTable();
-      renderOpsTable(allOperational);
+      filterOpsTable();   // keep the search text and category filter after every refresh
       populatePoDatalist();
       renderWindow();
       renderCharts();
@@ -1024,7 +1024,7 @@
       }
       
       filterPlanningTable();
-      renderOpsTable(allOperational);
+      filterOpsTable();   // keep the search text and category filter after every refresh
       renderWindow();
     }
 
@@ -1346,13 +1346,11 @@
         return true;
       });
 
-      // Sort: PO / Batch No, then Trip number from 1 upwards (Trip 1 on top)
+      // Sort: newest first (latest Outbound time on top)
       rows.sort(function(a, b) {
-        const po = String(a.item.poBatchNo || '').localeCompare(String(b.item.poBatchNo || ''), undefined, { numeric: true });
-        if (po !== 0) return po;
-        const ta = parseInt(a.item.trip, 10), tb = parseInt(b.item.trip, 10);
-        if (!isNaN(ta) && !isNaN(tb) && ta !== tb) return ta - tb;
-        return (a.item.outboundMs || 0) - (b.item.outboundMs || 0);
+        const d = (b.item.outboundMs || 0) - (a.item.outboundMs || 0);
+        if (d !== 0) return d;
+        return (parseInt(b.item.trip, 10) || 0) - (parseInt(a.item.trip, 10) || 0);
       });
 
       let html = '';
@@ -2207,7 +2205,7 @@
       return localDateOf(ms) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
     }
 
-    // Trips that left Meritar on the export date, filtered by the status dropdown, ordered by PO then Trip
+    // Trips that left Meritar on the export date, filtered by the status dropdown, newest first
     function getWindowExportRows() {
       const now = windowNow();
       const date = getWindowExportDate();
@@ -2240,11 +2238,9 @@
         });
       });
       out.sort(function(a, b) {
-        const po = String(a.po).localeCompare(String(b.po), undefined, { numeric: true });
-        if (po !== 0) return po;
-        const ta = parseInt(a.trip, 10), tb = parseInt(b.trip, 10);
-        if (!isNaN(ta) && !isNaN(tb) && ta !== tb) return ta - tb;
-        return a._ob - b._ob;
+        const d = (b._ob || 0) - (a._ob || 0);
+        if (d !== 0) return d;
+        return (parseInt(b.trip, 10) || 0) - (parseInt(a.trip, 10) || 0);
       });
       return out;
     }
@@ -2317,7 +2313,9 @@
       if (isSchedule) {
         modalTitle.innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-400"></i> Schedule Delivery Form`;
         tripContainer.classList.remove("hidden"); tripInput.required = true;
+        setQtyLocked(true);
       } else {
+        setQtyLocked(false);
         modalTitle.innerHTML = `<i class="fa-solid fa-truck"></i> Delivery Plan Form`;
         tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
       }
@@ -2329,6 +2327,15 @@
       document.getElementById("tanggal").valueAsDate = new Date();
       document.getElementById("shipmentModal").classList.remove("hidden");
       document.getElementById("shipmentModal").classList.add("flex");
+    }
+
+    // Operational TMS Container Qty always follows the Delivery Plan, so it is read-only there
+    function setQtyLocked(locked) {
+      const q = document.getElementById("qtyContainer");
+      q.readOnly = locked;
+      q.classList.toggle("bg-slate-100", locked);
+      q.classList.toggle("cursor-not-allowed", locked);
+      q.title = locked ? "Follows the Container Qty of the Delivery Plan" : "";
     }
 
     function editData(rowId) {
@@ -2369,6 +2376,7 @@
       } else {
         tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
       }
+      setQtyLocked(isOpsItem);
 
       document.getElementById("tanggal").value = item.tanggal;
       document.getElementById("poBatchNo").value = item.poBatchNo;
@@ -2607,13 +2615,10 @@
     }
   </script>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
+<script>
+  if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
-    });
   }
-  </script>
-  
+</script>
 </body>
 </html>
