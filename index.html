@@ -510,7 +510,7 @@
               <span>PO No / Batch No</span>
               <span id="autoFillBadge" class="hidden text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-bolt"></i> Auto-filled</span>
             </label>
-            <input type="text" id="poBatchNo" list="planningPoOptions" oninput="autoFillFromPlanning()" maxlength="40" placeholder="Enter / Select PO No" class="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 outline-none" required>
+            <input type="text" id="poBatchNo" autocomplete="off" oninput="autoFillFromPlanning()" maxlength="40" placeholder="Enter / Select PO No" class="w-full px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 outline-none" required>
             <datalist id="planningPoOptions"></datalist>
           </div>
           <div>
@@ -1755,7 +1755,28 @@
     }
 
     function getOpenPlans() {
-      return allPlanning.filter(p => String(p.status || '').trim().toUpperCase() !== 'COMPLETED');
+      const keyOf = p => [p.poBatchNo, p.model, p.type].map(v => String(v || '').trim().toUpperCase()).join('|');
+      const dateOf = p => String(p.tanggal || '').split('T')[0];
+      // Latest date on which each PO / Model / Type has a COMPLETED plan
+      const doneOn = {};
+      allPlanning.forEach(p => {
+        if (String(p.status || '').trim().toUpperCase() !== 'COMPLETED') return;
+        const k = keyOf(p), d = dateOf(p);
+        if (!doneOn[k] || d > doneOn[k]) doneOn[k] = d;
+      });
+      // An open plan is dropped when a LATER plan of the same PO / Model / Type is already COMPLETED
+      // (the earlier plan was probably not sent for some reason and no longer needs to be scheduled).
+      const open = allPlanning.filter(p => String(p.status || '').trim().toUpperCase() !== 'COMPLETED'
+        && !(doneOn[keyOf(p)] && doneOn[keyOf(p)] > dateOf(p)));
+      // A plan that was not finished on its date is dropped and followed by the plan of the next date
+      // (same PO / Model / Type): only the latest open plan of each group stays in the list.
+      const latest = {};
+      open.forEach(p => {
+        const k = [p.poBatchNo, p.model, p.type].map(v => String(v || '').trim().toUpperCase()).join('|');
+        const d = String(p.tanggal || '').split('T')[0];
+        if (!latest[k] || d > latest[k].d) latest[k] = { d: d, p: p };
+      });
+      return Object.keys(latest).map(k => latest[k].p);
     }
 
     function populatePoDatalist() {
@@ -1769,7 +1790,9 @@
         if (!grouped[key]) {
           grouped[key] = { model: item.model, route: item.origin + ' -> ' + item.destination, types: [] };
         }
-        if (!grouped[key].types.includes(item.type)) grouped[key].types.push(item.type);
+        // Show what is still open for this PO: planned qty vs trips already received
+        const label = item.type + ' (received ' + (item.recv || 0) + ' of ' + item.qtyContainer + ')';
+        if (!grouped[key].types.includes(label)) grouped[key].types.push(label);
       });
 
       let optionsHtml = '';
@@ -1906,7 +1929,7 @@
             <td class="px-3 py-3 text-center font-bold text-slate-800">${esc(item.qtyContainer)}</td>
             <td class="px-3 py-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold border ${categoryBadge}">${esc(item.category)}</span></td>
             <td class="px-3 py-3 text-slate-600">${esc(item.notes || "-")}</td>
-            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadgeClass}">${currentStatus}</span></td>
+            <td class="px-3 py-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold border ${statusBadgeClass}">${currentStatus}</span> <span class="text-[10px] text-slate-500 font-semibold" title="Trips received / Container Qty of this plan">${item.recv || 0}/${esc(item.qtyContainer)}</span></td>
             <td class="px-3 py-3 text-center space-x-1">${actionButtons}</td>
           </tr>`;
       });
@@ -2296,6 +2319,19 @@
     // ===================== FORM =====================
     function openModal(isSchedule) {
       if (userRole === "GUEST" || userRole === "RECEIVING") return showAlert("Access Denied!", "error");
+      populatePoDatalist();   // always rebuild the list so completed plans are gone
+      if (isSchedule) {
+        // Fetch the latest plan statuses first, so a plan that just became COMPLETED disappears from the PO list
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res || res.authRequired || !res.planning) return;
+            allPlanning = res.planning || [];
+            allOperational = res.operational || allOperational;
+            populatePoDatalist();
+          })
+          .withFailureHandler(function() {})
+          .getTMSData(document.getElementById("filterDashboardDate").value, sessionToken);
+      }
       if (!isSchedule && userRole !== "GEELY") return showAlert("Access Denied! Only Admin Geely can create Delivery Plan.", "error");
 
       document.getElementById("tmsForm").reset();
@@ -2314,8 +2350,10 @@
         modalTitle.innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-400"></i> Schedule Delivery Form`;
         tripContainer.classList.remove("hidden"); tripInput.required = true;
         setQtyLocked(true);
+        document.getElementById("poBatchNo").setAttribute("list", "planningPoOptions");
       } else {
         setQtyLocked(false);
+        document.getElementById("poBatchNo").removeAttribute("list");   // the PO suggestions are only for scheduling a trip
         modalTitle.innerHTML = `<i class="fa-solid fa-truck"></i> Delivery Plan Form`;
         tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
       }
@@ -2377,6 +2415,8 @@
         tripContainer.classList.add("hidden"); tripInput.required = false; tripInput.value = "";
       }
       setQtyLocked(isOpsItem);
+      if (isOpsItem) document.getElementById("poBatchNo").setAttribute("list", "planningPoOptions");
+      else document.getElementById("poBatchNo").removeAttribute("list");
 
       document.getElementById("tanggal").value = item.tanggal;
       document.getElementById("poBatchNo").value = item.poBatchNo;
@@ -2615,10 +2655,10 @@
     }
   </script>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
   }
-</script>
+  </script>
 </body>
 </html>
